@@ -28,7 +28,7 @@ class _SignInScreenState extends State<SignInScreen> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
-            Navigator.pop(context);
+            Navigator.pushNamed(context, '/signup');
           },
         ),
         title: const Text(
@@ -156,6 +156,20 @@ class _SignInScreenState extends State<SignInScreen> {
                       ),
                     ),
                   ),
+                  const SizedBox(height: 16),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/signup');
+                    },
+                    child: const Text(
+                      "Don't have an account? Sign Up",
+                      style: TextStyle(
+                        fontFamily: 'TTTravels',
+                        fontSize: 14,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -173,6 +187,8 @@ class _SignInScreenState extends State<SignInScreen> {
       debugPrint('Signing in with: $email, $password');
 
       // TODO: Authentication logic here
+
+      Navigator.pushNamed(context, '/explore');
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Signed in successfully!')),

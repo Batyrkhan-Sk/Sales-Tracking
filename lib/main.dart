@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'presentation/screens/sign_up_screen.dart';
+import 'presentation/screens/explore_screen.dart';
 import 'presentation/screens/sign_in_screen.dart';
+import 'presentation/screens/warehouse_details_screen.dart';
+import 'presentation/models/warehouse.dart';
 
 void main() {
   runApp(const MyApp());
@@ -12,18 +14,18 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: '',
+      title: 'Sales Tracking App',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-        useMaterial3: true,
-        inputDecorationTheme: const InputDecorationTheme(
-          border: OutlineInputBorder(),
-        ),
+        primarySwatch: Colors.blue,
       ),
-      initialRoute: '/signin',
+      initialRoute: '/explore',
       routes: {
-        '/signup': (context) => const SignUpScreen(),
+        '/explore': (context) => const ExploreScreen(),
         '/signin': (context) => const SignInScreen(),
+        '/warehouse-details': (context) {
+          final Warehouse warehouse = ModalRoute.of(context)!.settings.arguments as Warehouse;
+          return WarehouseDetailsScreen(warehouse: warehouse);
+        },
       },
     );
   }
