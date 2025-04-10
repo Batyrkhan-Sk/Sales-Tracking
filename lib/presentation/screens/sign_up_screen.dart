@@ -25,24 +25,24 @@ class _SignUpScreenState extends State<SignUpScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          toolbarHeight: 90,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () {
-              Navigator.pop(context);
-            },
-          ),
-          title: const Text(
-            'Create Account',
-            style: TextStyle(
-              fontFamily: 'TTTravels',
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          centerTitle: false,
+      appBar: AppBar(
+        toolbarHeight: 90,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context);
+          },
         ),
+        title: const Text(
+          'Create Account',
+          style: TextStyle(
+            fontFamily: 'TTTravels',
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        centerTitle: false,
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -69,6 +69,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       decoration: const InputDecoration(
                         hintText: 'Enter full name',
                         contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+                        border: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.grey),
+                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.grey),
+                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.black),
+                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                        ),
                       ),
                       style: const TextStyle(fontFamily: 'TTTravels', fontSize: 14),
                       validator: (value) {
@@ -95,6 +107,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       decoration: const InputDecoration(
                         hintText: 'Enter email',
                         contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+                        border: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.grey),
+                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.grey),
+                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.black),
+                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                        ),
                       ),
                       style: const TextStyle(fontFamily: 'TTTravels', fontSize: 14),
                       keyboardType: TextInputType.emailAddress,
@@ -135,6 +159,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             });
                           },
                         ),
+                        border: const OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.grey),
+                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                        ),
+                        enabledBorder: const OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.grey),
+                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                        ),
+                        focusedBorder: const OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.black),
+                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                        ),
                       ),
                       style: const TextStyle(fontFamily: 'TTTravels', fontSize: 14),
                       obscureText: !_isPasswordVisible,
@@ -147,15 +183,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         }
                         return null;
                       },
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Password must contain at least 8 characters.',
-                    style: TextStyle(
-                      fontFamily: 'TTTravels',
-                      color: Colors.grey,
-                      fontSize: 12,
                     ),
                   ),
                   const SizedBox(height: 30),
@@ -171,6 +198,21 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         fontFamily: 'TTTravels',
                         fontSize: 16,
                         color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Center(
+                    child: TextButton(
+                      onPressed: () {
+                        Navigator.pushNamed(context, '/signin');
+                      },
+                      child: const Text(
+                        'Already have an account? Sign In',
+                        style: TextStyle(
+                          fontFamily: 'TTTravels',
+                          fontSize: 14,
+                        ),
                       ),
                     ),
                   ),
@@ -193,6 +235,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Account created successfully!')),
+      );
+
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        '/signin',
+            (route) => false,
       );
     }
   }

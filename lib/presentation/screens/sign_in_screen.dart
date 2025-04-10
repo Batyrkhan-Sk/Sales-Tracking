@@ -28,7 +28,7 @@ class _SignInScreenState extends State<SignInScreen> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
-            Navigator.pushNamed(context, '/signup');
+            Navigator.pop(context);
           },
         ),
         title: const Text(
@@ -66,6 +66,18 @@ class _SignInScreenState extends State<SignInScreen> {
                       decoration: const InputDecoration(
                         hintText: 'Enter email',
                         contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+                        border: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.grey),
+                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.grey),
+                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.black),
+                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                        ),
                       ),
                       style: const TextStyle(fontFamily: 'TTTravels', fontSize: 14),
                       keyboardType: TextInputType.emailAddress,
@@ -106,12 +118,27 @@ class _SignInScreenState extends State<SignInScreen> {
                             });
                           },
                         ),
+                        border: const OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.grey),
+                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                        ),
+                        enabledBorder: const OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.grey),
+                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                        ),
+                        focusedBorder: const OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.black),
+                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                        ),
                       ),
                       style: const TextStyle(fontFamily: 'TTTravels', fontSize: 14),
                       obscureText: !_isPasswordVisible,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please enter your password';
+                        }
+                        if (value.length < 8) {
+                          return 'Password must contain at least 8 characters';
                         }
                         return null;
                       },
@@ -157,16 +184,17 @@ class _SignInScreenState extends State<SignInScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/signup');
-                    },
-                    child: const Text(
-                      "Don't have an account? Sign Up",
-                      style: TextStyle(
-                        fontFamily: 'TTTravels',
-                        fontSize: 14,
-                        color: Colors.black,
+                  Center(
+                    child: TextButton(
+                      onPressed: () {
+                        Navigator.pushNamed(context, '/signup');
+                      },
+                      child: const Text(
+                        "Don't have an account? Sign Up",
+                        style: TextStyle(
+                          fontFamily: 'TTTravels',
+                          fontSize: 14,
+                        ),
                       ),
                     ),
                   ),
@@ -188,10 +216,14 @@ class _SignInScreenState extends State<SignInScreen> {
 
       // TODO: Authentication logic here
 
-      Navigator.pushNamed(context, '/explore');
-
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Signed in successfully!')),
+      );
+
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        '/explore',
+            (route) => false, // Clear the navigation stack
       );
     }
   }

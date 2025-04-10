@@ -78,8 +78,8 @@ class _WarehouseDetailsScreenState extends State<WarehouseDetailsScreen>
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
-                labelPadding: const EdgeInsets.symmetric(horizontal: 8.0),
-                indicatorPadding: const EdgeInsets.symmetric(horizontal: 8.0),
+                labelPadding: const EdgeInsets.symmetric(horizontal: 2.0),
+                indicatorPadding: const EdgeInsets.symmetric(horizontal: 2.0),
                 indicator: BoxDecoration(
                   color: Color(0xFF3D4A28),
                   borderRadius: BorderRadius.circular(20),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'presentation/screens/explore_screen.dart';
 import 'presentation/screens/sign_in_screen.dart';
+import 'presentation/screens/sign_up_screen.dart';
 import 'presentation/screens/warehouse_details_screen.dart';
 import 'presentation/models/warehouse.dart';
 
@@ -22,6 +23,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/explore': (context) => const ExploreScreen(),
         '/signin': (context) => const SignInScreen(),
+        '/signup': (context) => const SignUpScreen(),
         '/warehouse-details': (context) {
           final Warehouse warehouse = ModalRoute.of(context)!.settings.arguments as Warehouse;
           return WarehouseDetailsScreen(warehouse: warehouse);
