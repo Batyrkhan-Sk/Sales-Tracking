@@ -70,7 +70,33 @@ class WarehouseCard extends StatelessWidget {
             ),
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: Image.asset(
+              child: warehouse.imageUrl.startsWith('http')
+                  ? Image.network(
+                warehouse.imageUrl,
+                width: 120,
+                height: 120,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return const Center(
+                    child: Text(
+                      'Failed to load image',
+                      style: TextStyle(color: Colors.red),
+                    ),
+                  );
+                },
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Center(
+                    child: CircularProgressIndicator(
+                      value: loadingProgress.expectedTotalBytes != null
+                          ? loadingProgress.cumulativeBytesLoaded /
+                          loadingProgress.expectedTotalBytes!
+                          : null,
+                    ),
+                  );
+                },
+              )
+                  : Image.asset(
                 warehouse.imageUrl,
                 width: 120,
                 height: 120,
@@ -84,7 +110,7 @@ class WarehouseCard extends StatelessWidget {
                   );
                 },
               ),
-            ),
+            )
           ],
         ),
       ),
