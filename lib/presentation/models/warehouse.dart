@@ -3,20 +3,27 @@ class Warehouse {
   final String name;
   final String imageUrl;
   final String? description;
+  final Map<String, dynamic>? dimensions;
+  final double? price;
 
   Warehouse({
     required this.id,
     required this.name,
     required this.imageUrl,
     this.description,
+    this.dimensions,
+    this.price,
   });
+
   // Create warehouse from JSON
   factory Warehouse.fromJson(Map<String, dynamic> json) {
     return Warehouse(
-      id: json['id'],
+      id: json['_id'], // MongoDB использует _id
       name: json['name'],
-      imageUrl: json['image_url'],
+      imageUrl: json['imageUrl'], // Обратите внимание: не image_url, а imageUrl
       description: json['description'],
+      dimensions: json['dimensions'],
+      price: json['price'] != null ? json['price'].toDouble() : null,
     );
   }
 
@@ -25,8 +32,10 @@ class Warehouse {
     return {
       'id': id,
       'name': name,
-      'image_url': imageUrl,
+      'imageUrl': imageUrl,
       'description': description,
+      'dimensions': dimensions,
+      'price': price,
     };
   }
 }

@@ -24,55 +24,46 @@ class _ExploreScreenState extends State<ExploreScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pushNamed(context, '/signin');
+          },
+        ),
+        title: const Text(    'Explore more', style: TextStyle(
+          fontFamily: 'TTTravels',
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF3D4A28),
+        ),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
             onPressed: () {
-              Navigator.pushNamed(context, '/signin');
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                '/signin',
+                    (route) => false,
+              );
             },
           ),
-          title: const Text(    'Explore more', style: TextStyle(
-            fontFamily: 'TTTravels',
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF3D4A28),
-          ),
-          ),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.logout),
-              onPressed: () {
-                Navigator.pushNamedAndRemoveUntil(
-                  context,
-                  '/signin',
-                  (route) => false,
-                );
-              },
-            ),
-          ],
-        ),
+        ],
+      ),
       body: FutureBuilder<List<Warehouse>>(
           future: _warehousesFuture,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
             } else if (snapshot.hasError) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text('Failed to load warehouses'),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () {
-                        setState(() {
-                          _warehousesFuture = _apiService.fetchWarehouses();
-                        });
-                      },
-                      child: const Text('Retry'),
-                    ),
-                  ],
-                ),
+              return _buildErrorWidget(
+                'Failed to load warehouses',
+                    () {
+                  setState(() {
+                    _warehousesFuture = _apiService.fetchWarehouses();
+                  });
+                },
               );
             } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
               return const Center(child: Text('No warehouses found'));
@@ -117,19 +108,19 @@ class _ExploreScreenState extends State<ExploreScreen> {
         type: BottomNavigationBarType.fixed,
         selectedItemColor: const Color(0xFF3D4A28),  unselectedItemColor: Colors.black54,
         currentIndex: 0,  onTap: (index) {
-          if (index == 0) {    } else if (index == 1) {
-          } else if (index == 2) {    } else if (index == 3) {
-            Navigator.pushNamed(context, '/signin');    }
-        },  items: const [
-          BottomNavigationBarItem(      icon: Icon(Icons.home),
-            label: '',    ),
-          BottomNavigationBarItem(      icon: Icon(Icons.qr_code),
-            label: '',    ),
-          BottomNavigationBarItem(      icon: Icon(Icons.edit_note),
-            label: '',    ),
-          BottomNavigationBarItem(      icon: Icon(Icons.menu),
-            label: '',    ),
-          ],
+        if (index == 0) {    } else if (index == 1) {
+        } else if (index == 2) {    } else if (index == 3) {
+          Navigator.pushNamed(context, '/signin');    }
+      },  items: const [
+        BottomNavigationBarItem(      icon: Icon(Icons.home),
+          label: '',    ),
+        BottomNavigationBarItem(      icon: Icon(Icons.qr_code),
+          label: '',    ),
+        BottomNavigationBarItem(      icon: Icon(Icons.edit_note),
+          label: '',    ),
+        BottomNavigationBarItem(      icon: Icon(Icons.menu),
+          label: '',    ),
+      ],
       ),
     );
   }
@@ -156,5 +147,4 @@ class _ExploreScreenState extends State<ExploreScreen> {
       ),
     );
   }
-
 }

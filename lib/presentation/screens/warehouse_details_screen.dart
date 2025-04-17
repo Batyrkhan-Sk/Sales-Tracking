@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/warehouse.dart';
+import '../../services/api_service.dart';
 
 class WarehouseDetailsScreen extends StatefulWidget {
   final Warehouse warehouse;
@@ -13,11 +14,66 @@ class WarehouseDetailsScreen extends StatefulWidget {
 class _WarehouseDetailsScreenState extends State<WarehouseDetailsScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final ApiService _apiService = ApiService();
+  List<Map<String, dynamic>> products = [];
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+    _loadWarehouseDetails();
+  }
+
+  Future<void> _loadWarehouseDetails() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      // Получаем детальную информацию о складе из API
+      // Предполагается, что у объекта warehouse есть id
+      final warehouseDetails = await _apiService.fetchWarehouseDetails(widget.warehouse.id);
+
+      // В идеале, ваш API должен возвращать продукты, связанные с этим складом
+      // Здесь мы будем использовать данные, предоставленные в warehouses
+      // В будущем здесь должен быть отдельный вызов API для получения продуктов
+
+      // Временное решение для демонстрации
+      setState(() {
+        // Предполагается, что у модели Warehouse есть поле products или аналогичное
+        // Если такого поля нет, этот код нужно будет адаптировать к вашей модели данных
+        products = [
+          {
+            'name': 'Cotton armchair',
+            'price': 259.99,
+            'imageUrl': warehouseDetails.imageUrl,
+            'category': 'Chair',
+          },
+          {
+            'name': 'Wood table',
+            'price': 349.99,
+            'imageUrl': warehouseDetails.imageUrl, // Используем то же изображение для демонстрации
+            'category': 'Table',
+          },
+          {
+            'name': 'Home decor set',
+            'price': 129.99,
+            'imageUrl': warehouseDetails.imageUrl, // Используем то же изображение для демонстрации
+            'category': 'Decor',
+          },
+        ];
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+      // Показать ошибку пользователю
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error loading warehouse details: $e')),
+      );
+    }
   }
 
   @override
@@ -56,18 +112,20 @@ class _WarehouseDetailsScreenState extends State<WarehouseDetailsScreen>
                 IconButton(
                   icon: const Icon(Icons.search),
                   onPressed: () {
+                    // Функциональность поиска
                   },
                 ),
                 IconButton(
                   icon: const Icon(Icons.shopping_cart),
                   onPressed: () {
+                    // Функциональность корзины
                   },
                 ),
               ],
               bottom: TabBar(
                 controller: _tabController,
                 labelColor: Colors.white,
-                unselectedLabelColor: Color(0xFF3D4A28),
+                unselectedLabelColor: const Color(0xFF3D4A28),
                 labelStyle: const TextStyle(
                   fontFamily: 'TTTravels',
                   fontSize: 14,
@@ -81,7 +139,7 @@ class _WarehouseDetailsScreenState extends State<WarehouseDetailsScreen>
                 labelPadding: const EdgeInsets.symmetric(horizontal: 2.0),
                 indicatorPadding: const EdgeInsets.symmetric(horizontal: 2.0),
                 indicator: BoxDecoration(
-                  color: Color(0xFF3D4A28),
+                  color: const Color(0xFF3D4A28),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 tabs: [
@@ -133,7 +191,9 @@ class _WarehouseDetailsScreenState extends State<WarehouseDetailsScreen>
           if (index == 0) {
             Navigator.pushNamed(context, '/explore');
           } else if (index == 1) {
+            // Действие для вкладки QR
           } else if (index == 2) {
+            // Действие для вкладки Notes
           } else if (index == 3) {
             Navigator.pushNamed(context, '/signin');
           }
@@ -161,25 +221,20 @@ class _WarehouseDetailsScreenState extends State<WarehouseDetailsScreen>
   }
 
   Widget buildProductList({String? category}) {
-    final List<Map<String, dynamic>> products = [
-      {
-        'name': 'Cotton armchair',
-        'price': 259.99,
-        'imageUrl': widget.warehouse.imageUrl,
-        'category': 'Chair',
-      },
-    ];
-
+    if (isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
     final filteredProducts = category != null
         ? products.where((product) => product['category'] == category).toList()
         : products;
 
+    // Добавляем пустые места, чтобы показать "Coming Soon"
     final List<Map<String, dynamic>> displayItems = [
       ...filteredProducts,
-      {'isEmpty': true},
-      {'isEmpty': true},
-      {'isEmpty': true},
+      if (filteredProducts.length < 3) {'isEmpty': true},
+      if (filteredProducts.length < 2) {'isEmpty': true},
+      if (filteredProducts.isEmpty) {'isEmpty': true},
     ];
 
     return ListView.builder(
@@ -271,20 +326,7 @@ class _WarehouseDetailsScreenState extends State<WarehouseDetailsScreen>
                   const SizedBox(width: 12),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(12),
-                    child: Image.asset(
-                      item['imageUrl'],
-                      width: 100,
-                      height: 100,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return const Center(
-                          child: Text(
-                            'Failed to load image',
-                            style: TextStyle(color: Colors.red),
-                          ),
-                        );
-                      },
-                    ),
+                    child: _buildProductImage(item['imageUrl']),
                   ),
                 ],
               ),
@@ -293,5 +335,61 @@ class _WarehouseDetailsScreenState extends State<WarehouseDetailsScreen>
         }
       },
     );
+  }
+
+  Widget _buildProductImage(String imageUrl) {
+    // Проверяем, является ли imageUrl действительным URL
+    bool isValidUrl = imageUrl.startsWith('http') || imageUrl.startsWith('https');
+
+    // Если это действительно URL, используем Image.network
+    if (isValidUrl) {
+      return Image.network(
+        imageUrl,
+        width: 100,
+        height: 100,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            width: 100,
+            height: 100,
+            color: Colors.grey[300],
+            child: const Center(
+              child: Icon(Icons.image_not_supported, color: Colors.grey),
+            ),
+          );
+        },
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Center(
+            child: CircularProgressIndicator(
+              value: loadingProgress.expectedTotalBytes != null
+                  ? loadingProgress.cumulativeBytesLoaded /
+                  loadingProgress.expectedTotalBytes!
+                  : null,
+            ),
+          );
+        },
+      );
+    }
+    // Если строка содержит "asset", используем Image.asset
+    else if (imageUrl.contains('asset')) {
+      return Image.asset(
+        imageUrl,
+        width: 100,
+        height: 100,
+        fit: BoxFit.cover,
+      );
+    }
+    // В противном случае показываем заполнитель
+    else {
+      return Container(
+        width: 100,
+        height: 100,
+        color: Colors.grey[300],
+        child: const Center(
+          child: Text('No Image', style: TextStyle(color: Colors.grey)),
+        ),
+      );
+    }
   }
 }
