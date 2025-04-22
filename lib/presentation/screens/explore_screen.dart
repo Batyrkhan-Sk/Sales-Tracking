@@ -106,7 +106,7 @@ class ExploreScreen extends StatelessWidget {
           } else if (index == 1) {
           } else if (index == 2) {
           } else if (index == 3) {
-            Navigator.pushNamed(context, '/signin');
+            Navigator.pushNamed(context, '/account');
           }
         },
         items: const [
