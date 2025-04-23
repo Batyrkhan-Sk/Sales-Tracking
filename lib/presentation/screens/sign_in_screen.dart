@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../services/api_service.dart';
+import "package:shared_preferences/shared_preferences.dart";
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -12,6 +14,8 @@ class _SignInScreenState extends State<SignInScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isPasswordVisible = false;
+  bool _isLoading = false;
+  final ApiService _apiService = ApiService();
 
   @override
   void dispose() {
@@ -207,24 +211,54 @@ class _SignInScreenState extends State<SignInScreen> {
     );
   }
 
-  void _signIn() {
+  Future<void> _signIn() async {
     if (_formKey.currentState!.validate()) {
-      final email = _emailController.text.trim();
-      final password = _passwordController.text;
+      try {
+        setState(() {
+          _isLoading = true;
+        });
 
-      debugPrint('Signing in with: $email, $password');
+        final email = _emailController.text.trim();
+        final password = _passwordController.text;
 
-      // TODO: Authentication logic here
+        // Send login request
+        final loginResponse = await _apiService.loginUser(email, password);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Signed in successfully!')),
-      );
+        // Get token from response
+        final token = loginResponse['token'];
 
-      Navigator.pushNamedAndRemoveUntil(
-        context,
-        '/explore',
-            (route) => false, // Clear the navigation stack
-      );
+        // Save token and user information
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('token', token);
+        await prefs.setString('userId', loginResponse['user']['id']);
+        await prefs.setString('fullName', loginResponse['user']['fullName']);
+        await prefs.setString('email', loginResponse['user']['email']);
+
+        // Navigate to main screen
+        if (mounted) {
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            '/explore',
+                (route) => false,
+          );
+        }
+      } catch (error) {
+        // Show error message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Login failed: ${error.toString()}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      }
     }
   }
 }
