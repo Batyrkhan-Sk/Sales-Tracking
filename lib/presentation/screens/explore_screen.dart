@@ -137,6 +137,29 @@ class _ExploreScreenState extends State<ExploreScreen> {
               fontSize: 16,
               color: Colors.red,
             ),
+        selectedItemColor: const Color(0xFF3D4A28),
+        unselectedItemColor: Colors.black54,
+        currentIndex: 0,
+        onTap: (index) {
+          if (index == 0) {
+          } else if (index == 1) {
+          } else if (index == 2) {
+          } else if (index == 3) {
+            Navigator.pushNamed(context, '/account');
+          }
+        },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: '',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.qr_code),
+            label: '',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.edit_note),
+            label: '',
           ),
           const SizedBox(height: 16),
           ElevatedButton(
