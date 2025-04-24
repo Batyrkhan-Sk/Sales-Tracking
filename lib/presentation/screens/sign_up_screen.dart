@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../models/user.dart';
+import '../../services/api_service.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -13,6 +15,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isPasswordVisible = false;
+  bool _isLoading = false;
+  final ApiService _apiService = ApiService();
 
   @override
   void dispose() {
@@ -187,12 +191,21 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ),
                   const SizedBox(height: 30),
                   ElevatedButton(
-                    onPressed: _submitForm,
+                    onPressed: _isLoading ? null : _submitForm,
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       backgroundColor: Colors.black,
                     ),
-                    child: const Text(
+                    child: _isLoading
+                        ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                        : const Text(
                       'Sign Up',
                       style: TextStyle(
                         fontFamily: 'TTTravels',
@@ -225,23 +238,68 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 
-  void _submitForm() {
+  Future<void> _submitForm() async {
     if (_formKey.currentState!.validate()) {
-      final fullName = _fullNameController.text.trim();
-      final email = _emailController.text.trim();
-      final password = _passwordController.text;
+      try {
+        setState(() {
+          _isLoading = true;
+        });
 
-      debugPrint('Signing up with: $fullName, $email, $password');
+        final fullName = _fullNameController.text.trim();
+        final email = _emailController.text.trim();
+        final password = _passwordController.text;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Account created successfully!')),
-      );
+        // Create user object
+        final user = User(
+          fullName: fullName,
+          email: email,
+          password: password,
+        );
 
-      Navigator.pushNamedAndRemoveUntil(
-        context,
-        '/signin',
-            (route) => false,
-      );
+        // Send registration request
+        final response = _apiService.registerUser(user);
+
+        // Show success message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Account created successfully!'),
+              backgroundColor: Colors.green,),
+          );
+
+          // Navigate to sign-in screen
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            '/signin',
+                (route) => false,
+          );
+        }
+      } catch (error) {
+        // Parse and display a more user-friendly error message
+        String errorMessage = error.toString();
+
+        // Check for email already registered error
+        if (errorMessage.toLowerCase().contains('email already registered')) {
+          errorMessage = 'This email is already registered. Please use a different email or sign in.';
+        } else if (errorMessage.contains("type 'Null' is not a subtype of type 'String'")) {
+          errorMessage = 'Registration failed. Please check your information and try again.';
+        }
+        // Show error message
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(errorMessage),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      }
     }
   }
 }
