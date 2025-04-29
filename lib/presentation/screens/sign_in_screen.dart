@@ -173,12 +173,21 @@ class _SignInScreenState extends State<SignInScreen> {
                   ),
                   const SizedBox(height: 30),
                   ElevatedButton(
-                    onPressed: _signIn,
+                    onPressed: _isLoading ? null : _signIn,  // Disable button when loading
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       backgroundColor: Colors.black,
                     ),
-                    child: const Text(
+                    child: _isLoading
+                        ? const SizedBox(
+                      height: 16,
+                      width: 16,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                        : const Text(
                       'Sign In',
                       style: TextStyle(
                         fontFamily: 'TTTravels',

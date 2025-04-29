@@ -10,7 +10,6 @@ class Warehouse {
     required this.id,
     required this.name,
     required this.imageUrl,
-
     this.description,
     this.dimensions,
     this.price,
@@ -40,7 +39,3 @@ class Warehouse {
     };
   }
 }
-=======
-  });
-}
-

@@ -31,12 +31,14 @@ class _ExploreScreenState extends State<ExploreScreen> {
             Navigator.pushNamed(context, '/signin');
           },
         ),
-        title: const Text(    'Explore more', style: TextStyle(
-          fontFamily: 'TTTravels',
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-          color: Color(0xFF3D4A28),
-        ),
+        title: const Text(
+          'Explore more',
+          style: TextStyle(
+            fontFamily: 'TTTravels',
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF3D4A28),
+          ),
         ),
         actions: [
           IconButton(
@@ -106,44 +108,16 @@ class _ExploreScreenState extends State<ExploreScreen> {
       ),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: const Color(0xFF3D4A28),  unselectedItemColor: Colors.black54,
-        currentIndex: 0,  onTap: (index) {
-        if (index == 0) {    } else if (index == 1) {
-        } else if (index == 2) {    } else if (index == 3) {
-          Navigator.pushNamed(context, '/signin');    }
-      },  items: const [
-        BottomNavigationBarItem(      icon: Icon(Icons.home),
-          label: '',    ),
-        BottomNavigationBarItem(      icon: Icon(Icons.qr_code),
-          label: '',    ),
-        BottomNavigationBarItem(      icon: Icon(Icons.edit_note),
-          label: '',    ),
-        BottomNavigationBarItem(      icon: Icon(Icons.menu),
-          label: '',    ),
-      ],
-      ),
-    );
-  }
-
-  Widget _buildErrorWidget(String message, VoidCallback onRetry) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            message,
-            style: const TextStyle(
-              fontFamily: 'TTTravels',
-              fontSize: 16,
-              color: Colors.red,
-            ),
         selectedItemColor: const Color(0xFF3D4A28),
         unselectedItemColor: Colors.black54,
         currentIndex: 0,
         onTap: (index) {
           if (index == 0) {
+            // Already on Explore screen
           } else if (index == 1) {
+            // QR code functionality
           } else if (index == 2) {
+            // Edit note functionality
           } else if (index == 3) {
             Navigator.pushNamed(context, '/account');
           }
@@ -160,6 +134,28 @@ class _ExploreScreenState extends State<ExploreScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.edit_note),
             label: '',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.menu),
+            label: '',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorWidget(String message, VoidCallback onRetry) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            message,
+            style: const TextStyle(
+              fontFamily: 'TTTravels',
+              fontSize: 16,
+              color: Colors.red,
+            ),
           ),
           const SizedBox(height: 16),
           ElevatedButton(

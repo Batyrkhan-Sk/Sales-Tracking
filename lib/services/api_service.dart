@@ -7,7 +7,32 @@ import '../presentation/models/user.dart';
 class ApiService {
   final String baseUrl = 'http://192.168.0.14:5000/api';
 
+  // Add this development flag to bypass actual API calls
+  final bool devMode = true; // Set to false when you want to use real API
+
   Future<List<Warehouse>> fetchWarehouses() async {
+    if (devMode) {
+      // Return mock data in development mode
+      return [
+        Warehouse(
+          id: '1',
+          name: 'Mock Warehouse 1',
+          imageUrl: 'https://via.placeholder.com/300x200',
+          description: 'Mock description for testing',
+          dimensions: {'length': 120, 'width': 80, 'height': 90},
+          price: 299.99,
+        ),
+        Warehouse(
+          id: '2',
+          name: 'Mock Warehouse 2',
+          imageUrl: 'https://via.placeholder.com/300x200',
+          description: 'Another mock description',
+          dimensions: {'length': 150, 'width': 100, 'height': 75},
+          price: 499.99,
+        ),
+      ];
+    }
+
     try {
       final response = await http.get(Uri.parse('$baseUrl/furniture'));
       print('Response: $response');
@@ -25,6 +50,24 @@ class ApiService {
   }
 
   Future<Warehouse> fetchWarehouseDetails(String id) async {
+    if (devMode) {
+      // Return mock detail data
+      return Warehouse(
+        id: id,
+        name: 'Mock Warehouse Detail',
+        imageUrl: 'https://via.placeholder.com/600x400',
+        description: 'Detailed mock description for testing',
+        dimensions: {
+          'length': 120,
+          'width': 80,
+          'height': 90,
+          'weight': '15kg',
+          'material': 'Wood'
+        },
+        price: 399.99,
+      );
+    }
+
     try {
       final response = await http.get(Uri.parse('$baseUrl/furniture/$id'));
 
@@ -38,8 +81,18 @@ class ApiService {
       throw Exception('Error fetching warehouse details: $e');
     }
   }
-  // Метод для регистрации пользователя
+
   Future<User> registerUser(User user) async {
+    if (devMode) {
+      // Return a mock successful registration response
+      await Future.delayed(Duration(milliseconds: 500)); // Simulate network delay
+      return User(
+        id: 'mock-user-id',
+        fullName: user.fullName,
+        email: user.email,
+      );
+    }
+
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/users/register'),
@@ -52,27 +105,44 @@ class ApiService {
       );
 
       if (response.statusCode == 201) {
-        // Успешная регистрация
-        return jsonDecode(response.body);
+        // Successful registration
+        final responseData = jsonDecode(response.body);
+        return User(
+          id: responseData['id'] ?? 'unknown',
+          fullName: responseData['fullName'] ?? user.fullName,
+          email: responseData['email'] ?? user.email,
+        );
       } else {
-        // Обработка ошибок от сервера
+        // Handle server errors
         final errorData = jsonDecode(response.body);
         if (errorData.containsKey('message')) {
           throw errorData['message'];
         } else {
-          throw 'Ошибка регистрации: ${response.statusCode}';
+          throw 'Registration error: ${response.statusCode}';
         }
       }
     } catch (e) {
       if (e.toString().contains('already registered')) {
-        throw 'Email уже зарегистрирован. Пожалуйста, используйте другой email или войдите в систему.';
+        throw 'Email already registered. Please use another email or sign in.';
       }
-      throw 'Ошибка регистрации: ${e.toString()}';
+      throw 'Registration error: ${e.toString()}';
     }
   }
 
-  // Метод для входа пользователя
   Future<Map<String, dynamic>> loginUser(String email, String password) async {
+    if (devMode) {
+      // Return a mock successful login response
+      await Future.delayed(Duration(milliseconds: 500)); // Simulate network delay
+      return {
+        'user': {
+          'id': 'mock-user-id',
+          'fullName': 'Test User',
+          'email': email,
+        },
+        'token': 'mock-jwt-token-for-development'
+      };
+    }
+
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/users/login'),

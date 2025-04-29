@@ -6,111 +6,129 @@ class AccountScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F8F2),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFFF8F8F2),
-        elevation: 1,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                const CircleAvatar(
-                  radius: 35,
-                  backgroundImage: AssetImage('assets/images/avatar.png'),
-                ),
-                const SizedBox(width: 15),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    Text(
-                      'Syrymbetov Amir',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF37421F),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  const CircleAvatar(
+                    radius: 35,
+                    backgroundImage: AssetImage('assets/profile.jpg'),
+                  ),
+                  const SizedBox(width: 16),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text(
+                        'Amir Syrimbetov',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                          color: Colors.black,
+                        ),
                       ),
-                    ),
-                    SizedBox(height: 5),
-                    Text(
-                      'Admin',
-                      style: TextStyle(fontSize: 14, color: Colors.grey),
-                    ),
-                    SizedBox(height: 2),
-                    Text(
-                      'Tima7700@inbox.ru',
-                      style: TextStyle(fontSize: 13, color: Colors.grey),
-                    ),
-                  ],
-                )
-              ],
-            ),
-            const SizedBox(height: 30),
-            _buildMenuItem(
-              icon: Icons.person_outline,
-              label: 'Profile',
-              onTap: () {},
-            ),
-            const Divider(),
-            _buildMenuItem(
-              icon: Icons.hub_outlined,
-              label: 'Manage roles',
-              onTap: () {Navigator.pushNamed(context, '/manage-roles');},
-            ),
-            const Divider(),
-            _buildMenuItem(
-              icon: Icons.add_box_outlined,
-              label: 'Add products',
-              onTap: () {},
-            ),
-            const Divider(),
-            _buildMenuItem(
-              icon: Icons.logout,
-              label: 'Log out',
-              onTap: () {},
-            ),
-            const Spacer(),
-            const Divider(),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: const [
-                  Icon(Icons.home, size: 28),
-                  Icon(Icons.qr_code, size: 28),
-                  Icon(Icons.edit_note, size: 28),
-                  Icon(Icons.menu, size: 28),
+                      SizedBox(height: 4),
+                      Text('Administrator', style: TextStyle(color: Colors.black54)),
+                      Text('Tima7700@inbox.ru', style: TextStyle(color: Colors.black54)),
+                    ],
+                  ),
                 ],
               ),
-            ),
+              const SizedBox(height: 20),
+              Expanded(
+                child: ListView(
+                  children: [
+                    const Divider(),
+                    MenuItem(
+                      icon: Icons.person,
+                      text: 'Profile',
+                      onTap: () => Navigator.pushNamed(context, '/profile'),
+                    ),
+                    const Divider(),
+                    MenuItem(
+                      icon: Icons.hub_outlined,
+                      text: 'Role Management',
+                      onTap: () => Navigator.pushNamed(context, '/manage-roles'),
+                    ),
+                    const Divider(),
+                    MenuItem(
+                      icon: Icons.add_box_outlined,
+                      text: 'Add Items',
+                      onTap: () => Navigator.pushNamed(context, '/add-item'), // <-- Navigate to the named route
+                    ),
+                    const Divider(),
+                    MenuItem(
+                      icon: Icons.insert_chart_outlined,
+                      text: 'Reports',
+                      onTap: () => Navigator.pushNamed(context, '/reports'),
+                    ),
+                    const Divider(),
+                    MenuItem(
+                      icon: Icons.logout,
+                      text: 'Logout',
+                      onTap: () => Navigator.pushNamed(context, '/signin'),
+                    ),
+                    const Divider(),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      bottomNavigationBar: Theme(
+        data: Theme.of(context).copyWith(
+          canvasColor: Colors.white,
+        ),
+        child: BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
+          selectedItemColor: Colors.blue,
+          unselectedItemColor: Colors.black54,
+          currentIndex: 3,
+          onTap: (index) {
+            if (index == 0) {
+              Navigator.pushNamed(context, '/explore');
+            } else if (index == 1) {
+              Navigator.pushNamed(context, '/qr-code');
+            } else if (index == 2) {
+              Navigator.pushNamed(context, '/reports');
+            }
+          },
+          items: const [
+            BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
+            BottomNavigationBarItem(icon: Icon(Icons.qr_code), label: ''),
+            BottomNavigationBarItem(icon: Icon(Icons.edit_note), label: ''),
+            BottomNavigationBarItem(icon: Icon(Icons.menu), label: ''),
           ],
         ),
       ),
     );
   }
+}
 
-  Widget _buildMenuItem({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
+class MenuItem extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  final VoidCallback? onTap;
+
+  const MenuItem({
+    super.key,
+    required this.icon,
+    required this.text,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return ListTile(
-      contentPadding: EdgeInsets.zero,
       leading: Icon(icon, color: Colors.black),
       title: Text(
-        label,
-        style: const TextStyle(
-          fontSize: 16,
-          color: Color(0xFF37421F),
-        ),
+        text,
+        style: const TextStyle(fontSize: 16, color: Colors.black),
       ),
-      trailing: const Icon(Icons.arrow_circle_right_outlined, color: Colors.black),
+      trailing: const Icon(Icons.chevron_right, color: Colors.black),
       onTap: onTap,
     );
   }

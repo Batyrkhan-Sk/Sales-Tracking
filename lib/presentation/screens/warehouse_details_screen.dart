@@ -191,11 +191,11 @@ class _WarehouseDetailsScreenState extends State<WarehouseDetailsScreen>
           if (index == 0) {
             Navigator.pushNamed(context, '/explore');
           } else if (index == 1) {
-            // Действие для вкладки QR
+            Navigator.pushNamed(context, '/qr-code');
           } else if (index == 2) {
-            // Действие для вкладки Notes
+            Navigator.pushNamed(context, '/logs');
           } else if (index == 3) {
-            Navigator.pushNamed(context, '/signin');
+            Navigator.pushNamed(context, '/manage-roles');
           }
         },
         items: const [

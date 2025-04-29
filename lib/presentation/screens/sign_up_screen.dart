@@ -257,7 +257,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         );
 
         // Send registration request
-        final response = _apiService.registerUser(user);
+        final response = await _apiService.registerUser(user);
 
         // Show success message
         if (mounted) {
