@@ -1,11 +1,11 @@
-// lib/services/api_service.dart
 import 'dart:convert';
-import "package:http/http.dart" as http;
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../presentation/models/warehouse.dart';
 import '../presentation/models/user.dart';
 
 class ApiService {
-  final String baseUrl = 'http://192.168.0.14:5000/api';
+  final String baseUrl = 'my_api';
 
   // Add this development flag to bypass actual API calls
   final bool devMode = true; // Set to false when you want to use real API
@@ -168,5 +168,72 @@ class ApiService {
       print('Error during login: $e');
       throw Exception('Login failed: $e');
     }
+  }
+
+  Future<User> getCurrentUser() async {
+    if (devMode) {
+      // Return mock user data in development mode
+      await Future.delayed(Duration(milliseconds: 500)); // Simulate network delay
+      return User(
+        id: 'mock-user-id',
+        fullName: 'Amir Syrimbetov',
+        email: 'Tima7700@inbox.ru',
+        role: 'Administrator',
+      );
+    }
+
+    try {
+      // Assuming you store the token after login (e.g., in shared_preferences)
+      // For now, using a mock token; replace with actual token retrieval logic
+      final String token = 'mock-jwt-token-for-development';
+      final response = await http.get(
+        Uri.parse('$baseUrl/users/me'), // Typical endpoint for current user
+        headers: {'Authorization': 'Bearer $token'},
+      );
+
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+        return User.fromJson(json);
+      } else {
+        throw Exception('Failed to load current user: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Error fetching current user: $e');
+    }
+  }
+
+  Future<void> logout() async {
+    if (devMode) {
+      // Simulate logout in development mode
+      await Future.delayed(Duration(milliseconds: 500)); // Simulate network delay
+      return;
+    }
+
+    try {
+      // In production, assuming you store the token (e.g., in shared_preferences)
+      final String token = 'mock-jwt-token-for-development'; // Replace with actual token retrieval
+      final response = await http.post(
+        Uri.parse('$baseUrl/users/logout'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Failed to logout: ${response.statusCode}');
+      }
+      // Clear the stored token
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('token');
+    } catch (e) {
+      throw Exception('Error during logout: $e');
+    }
+  }
+
+  // New method to check login status
+  Future<bool> isLoggedIn() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('token') != null;
   }
 }

@@ -141,11 +141,10 @@ class LogsScreen extends StatelessWidget {
           if (index == 0) {
             Navigator.pushNamed(context, '/explore');
           } else if (index == 1) {
-            Navigator.pushNamed(context, '/scan');
+            Navigator.pushNamed(context, '/qr-code');
           } else if (index == 2) {
-            // current screen
           } else if (index == 3) {
-            Navigator.pushNamed(context, '/signin');
+            Navigator.pushNamed(context, '/account');
           }
         },
         items: const [

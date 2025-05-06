@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../services/api_service.dart';
+import '../../providers/app_providers.dart';
 import "package:shared_preferences/shared_preferences.dart";
 
 class SignInScreen extends StatefulWidget {
@@ -173,7 +175,7 @@ class _SignInScreenState extends State<SignInScreen> {
                   ),
                   const SizedBox(height: 30),
                   ElevatedButton(
-                    onPressed: _isLoading ? null : _signIn,  // Disable button when loading
+                    onPressed: _isLoading ? null : _signIn,
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       backgroundColor: Colors.black,
@@ -211,6 +213,28 @@ class _SignInScreenState extends State<SignInScreen> {
                       ),
                     ),
                   ),
+                  const SizedBox(height: 16),
+                  Center(
+                    child: TextButton(
+                      onPressed: () {
+                        Provider.of<GuestModeProvider>(context, listen: false).setGuestMode(true);
+
+                        Navigator.pushNamedAndRemoveUntil(
+                          context,
+                          '/explore',
+                              (route) => false,
+                        );
+                      },
+                      child: const Text(
+                        'Continue as Guest',
+                        style: TextStyle(
+                          fontFamily: 'TTTravels',
+                          fontSize: 14,
+                          color: Colors.blue,
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -230,21 +254,20 @@ class _SignInScreenState extends State<SignInScreen> {
         final email = _emailController.text.trim();
         final password = _passwordController.text;
 
-        // Send login request
         final loginResponse = await _apiService.loginUser(email, password);
 
-        // Get token from response
         final token = loginResponse['token'];
 
-        // Save token and user information
+
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('token', token);
         await prefs.setString('userId', loginResponse['user']['id']);
         await prefs.setString('fullName', loginResponse['user']['fullName']);
         await prefs.setString('email', loginResponse['user']['email']);
 
-        // Navigate to main screen
         if (mounted) {
+          Provider.of<GuestModeProvider>(context, listen: false).setGuestMode(false);
+
           Navigator.pushNamedAndRemoveUntil(
             context,
             '/explore',
@@ -252,7 +275,6 @@ class _SignInScreenState extends State<SignInScreen> {
           );
         }
       } catch (error) {
-        // Show error message
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

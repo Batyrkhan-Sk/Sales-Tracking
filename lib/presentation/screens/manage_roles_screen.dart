@@ -1,9 +1,46 @@
 import 'package:flutter/material.dart';
 
-class ManageRolesScreen extends StatelessWidget {
+class ManageRolesScreen extends StatefulWidget {
   const ManageRolesScreen({super.key});
 
+  @override
+  State<ManageRolesScreen> createState() => _ManageRolesScreenState();
+}
+
+class _ManageRolesScreenState extends State<ManageRolesScreen> {
   final List<String> roles = const ['Admin', 'Moderator', 'Worker'];
+  final TextEditingController _emailController = TextEditingController();
+  String _selectedRole = 'Admin';
+  List<Map<String, dynamic>> members = [
+    {'name': 'Amir Syrymbetov (you)', 'role': 'Admin', 'isCurrentUser': true},
+    {'name': 'Temirkhanov Tamerlan', 'role': 'Worker', 'isCurrentUser': false},
+  ];
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    super.dispose();
+  }
+
+  void _sendInvite() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Invite sent!')),
+    );
+  }
+
+  void _deleteMember(int index) {
+    setState(() {
+      members.removeAt(index);
+    });
+  }
+
+  void _updateRole(int index, String? newRole) {
+    if (newRole != null) {
+      setState(() {
+        members[index]['role'] = newRole;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,6 +81,7 @@ class ManageRolesScreen extends StatelessWidget {
               children: [
                 Expanded(
                   child: TextFormField(
+                    controller: _emailController,
                     decoration: InputDecoration(
                       hintText: 'email@example.com',
                       border: OutlineInputBorder(
@@ -62,14 +100,18 @@ class ManageRolesScreen extends StatelessWidget {
                   ),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
-                      value: roles[0],
+                      value: _selectedRole,
                       items: roles
                           .map((role) => DropdownMenuItem(
                         value: role,
                         child: Text(role),
                       ))
                           .toList(),
-                      onChanged: (value) {},
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() => _selectedRole = value);
+                        }
+                      },
                     ),
                   ),
                 ),
@@ -84,13 +126,10 @@ class ManageRolesScreen extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
-                onPressed: () {},
+                onPressed: _sendInvite,
                 child: const Text(
                   'Send invite',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.white
-                  ),
+                  style: TextStyle(fontSize: 16, color: Colors.white),
                 ),
               ),
             ),
@@ -104,33 +143,18 @@ class ManageRolesScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 15),
-            _buildMemberItem(
-              context,
-              name: 'Amir Syrymbetov (you)',
-              role: 'Admin',
-              isCurrentUser: true,
-            ),
-            _buildMemberItem(
-              context,
-              name: 'Temirkhanov Tamerlan',
-              role: 'Worker',
-              isCurrentUser: false,
-            ),
-          ],
-        ),
-      ),
-      bottomNavigationBar: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: BoxDecoration(
-          border: Border(top: BorderSide(color: Colors.grey.shade300)),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: const [
-            Icon(Icons.home, size: 28),
-            Icon(Icons.qr_code, size: 28),
-            Icon(Icons.edit_note, size: 28),
-            Icon(Icons.menu, size: 28),
+            ...members.asMap().entries.map((entry) {
+              final index = entry.key;
+              final member = entry.value;
+              return _buildMemberItem(
+                context,
+                name: member['name'],
+                role: member['role'],
+                isCurrentUser: member['isCurrentUser'],
+                onDelete: () => _deleteMember(index),
+                onRoleChanged: (newRole) => _updateRole(index, newRole),
+              );
+            }),
           ],
         ),
       ),
@@ -138,7 +162,11 @@ class ManageRolesScreen extends StatelessWidget {
   }
 
   Widget _buildMemberItem(BuildContext context,
-      {required String name, required String role, required bool isCurrentUser}) {
+      {required String name,
+        required String role,
+        required bool isCurrentUser,
+        VoidCallback? onDelete,
+        ValueChanged<String?>? onRoleChanged}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
@@ -154,7 +182,7 @@ class ManageRolesScreen extends StatelessWidget {
           if (!isCurrentUser)
             IconButton(
               icon: const Icon(Icons.delete_outline, color: Colors.black),
-              onPressed: () {},
+              onPressed: onDelete,
             ),
           const SizedBox(width: 4),
           Container(
@@ -169,7 +197,7 @@ class ManageRolesScreen extends StatelessWidget {
                 items: ['Admin', 'Moderator', 'Worker']
                     .map((r) => DropdownMenuItem(value: r, child: Text(r)))
                     .toList(),
-                onChanged: (value) {},
+                onChanged: onRoleChanged,
               ),
             ),
           ),
