@@ -5,6 +5,7 @@ import '../widgets/warehouse_card.dart';
 import '../../services/api_service.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/guest_mode_banner.dart';
+import '../widgets/bottom_navigation_helper.dart';
 
 class ExploreScreen extends StatefulWidget {
   const ExploreScreen({super.key});
@@ -31,6 +32,13 @@ class _ExploreScreenState extends State<ExploreScreen> {
   Widget build(BuildContext context) {
     final isGuestMode = Provider.of<GuestModeProvider>(context).isGuestMode;
 
+    final ThemeData theme = Theme.of(context);
+    final bool isDarkMode = theme.brightness == Brightness.dark;
+
+    final Color primaryColor = const Color(0xFF3D4A28);
+    final Color titleColor = isDarkMode ? Colors.white : primaryColor;
+    final Color warningColor = isDarkMode ? Colors.redAccent : Colors.red;
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -39,13 +47,13 @@ class _ExploreScreenState extends State<ExploreScreen> {
             Navigator.pushNamed(context, '/signin');
           },
         ),
-        title: const Text(
+        title: Text(
           'Explore more',
           style: TextStyle(
             fontFamily: 'TTTravels',
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: Color(0xFF3D4A28),
+            color: titleColor,
           ),
         ),
         actions: [
@@ -54,17 +62,17 @@ class _ExploreScreenState extends State<ExploreScreen> {
               onPressed: () {
                 Navigator.pushNamed(context, '/signin');
               },
-              child: const Text(
+              child: Text(
                 'Sign In',
                 style: TextStyle(
                   fontFamily: 'TTTravels',
-                  color: Color(0xFF3D4A28),
+                  color: titleColor,
                 ),
               ),
             )
           else
             IconButton(
-              icon: const Icon(Icons.logout),
+              icon: Icon(Icons.logout, color: titleColor),
               onPressed: () {
                 Navigator.pushNamedAndRemoveUntil(
                   context,
@@ -84,7 +92,9 @@ class _ExploreScreenState extends State<ExploreScreen> {
               future: _warehousesFuture,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
+                  return Center(child: CircularProgressIndicator(
+                    color: isDarkMode ? Colors.white : primaryColor,
+                  ));
                 } else if (snapshot.hasError) {
                   return _buildErrorWidget(
                     'Failed to load warehouses',
@@ -93,9 +103,17 @@ class _ExploreScreenState extends State<ExploreScreen> {
                         _warehousesFuture = _apiService.fetchWarehouses();
                       });
                     },
+                    warningColor,
                   );
                 } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return const Center(child: Text('No warehouses found'));
+                  return Center(
+                    child: Text(
+                      'No warehouses found',
+                      style: TextStyle(
+                        color: theme.textTheme.bodyLarge?.color,
+                      ),
+                    ),
+                  );
                 }
 
                 final warehouses = snapshot.data!;
@@ -106,13 +124,13 @@ class _ExploreScreenState extends State<ExploreScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'All Warehouses',
                           style: TextStyle(
                             fontFamily: 'TTTravels',
                             fontSize: 18,
                             fontWeight: FontWeight.w500,
-                            color: Color(0xFF3D4A28),
+                            color: titleColor,
                           ),
                         ),
                         const SizedBox(height: 12),
@@ -136,54 +154,33 @@ class _ExploreScreenState extends State<ExploreScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: const Color(0xFF3D4A28),
-        unselectedItemColor: Colors.black54,
-        currentIndex: 0,
-        onTap: (index) {
-          if (index == 0) {
-          } else if (index == 1) {
-            Navigator.pushNamed(context, '/qr-code');
-          } else if (index == 2) {
-            Navigator.pushNamed(context, '/logs');
-          } else if (index == 3) {
-            Navigator.pushNamed(context, '/account');
-          }
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: '',
+      bottomNavigationBar: Theme(
+        data: Theme.of(context).copyWith(
+          bottomNavigationBarTheme: BottomNavigationBarThemeData(
+            selectedItemColor: isDarkMode ? Colors.white : primaryColor,
+            unselectedItemColor: isDarkMode ? Colors.white70 : Colors.grey,
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.qr_code),
-            label: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.edit_note),
-            label: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.menu),
-            label: '',
-          ),
-        ],
+        ),
+        child: BottomNavigationHelper.buildBottomNavigation(
+          context,
+          BottomNavigationHelper.getCurrentIndex('/explore'),
+              (index) => BottomNavigationHelper.handleNavigation(context, index),
+        ),
       ),
     );
   }
 
-  Widget _buildErrorWidget(String message, VoidCallback onRetry) {
+  Widget _buildErrorWidget(String message, VoidCallback onRetry, Color errorColor) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
             message,
-            style: const TextStyle(
+            style: TextStyle(
               fontFamily: 'TTTravels',
               fontSize: 16,
-              color: Colors.red,
+              color: errorColor,
             ),
           ),
           const SizedBox(height: 16),

@@ -1,0 +1,19 @@
+{
+  "logout": "Logout",
+  "guestModeLimitedAccess": "Guest Mode: Limited access",
+  "signInFeatures": "Sign in to access all features including profile settings and personalization.",
+  "signIn": "Sign In",
+  "guestUser": "Guest User",
+  "darkMode": "Dark Mode",
+  "language": "Language",
+  "english": "English",
+  "russian": "Russian",
+  "unableToLoadUserData": "Unable to load user data",
+  "returnToLogin": "Return to Login",
+  "accountInfo": "Account info",
+  "name": "Name",
+  "email": "Email",
+  "phone": "Phone",
+  "user": "user",
+  "administratorRole": "Administrator"
+}

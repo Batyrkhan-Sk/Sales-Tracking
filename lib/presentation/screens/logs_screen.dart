@@ -1,24 +1,7 @@
 import 'package:flutter/material.dart';
-
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Logs Page',
-      theme: ThemeData(
-        scaffoldBackgroundColor: const Color(0xFFF9F9F4),
-        fontFamily: 'TTTravels',
-      ),
-      home: const LogsScreen(),
-    );
-  }
-}
+import 'package:provider/provider.dart';
+import '../../providers/app_providers.dart';
+import '../widgets/bottom_navigation_helper.dart';
 
 class LogsScreen extends StatelessWidget {
   const LogsScreen({super.key});
@@ -37,6 +20,13 @@ class LogsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final bool isDarkMode = theme.brightness == Brightness.dark;
+
+    final Color titleColor = isDarkMode ? Colors.white : const Color(0xFF3D4A28);
+    final Color containerColor = isDarkMode ? theme.cardColor : Colors.white;
+    final Color textColor = isDarkMode ? Colors.white70 : Colors.black87;
+
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -47,18 +37,18 @@ class LogsScreen extends StatelessWidget {
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Color(0xFF3D4A28)),
+                    icon: Icon(Icons.arrow_back, color: titleColor),
                     onPressed: () {
-                      Navigator.pop(context);
+                      Navigator.pushReplacementNamed(context, '/explore');
                     },
                   ),
                   const SizedBox(width: 8),
-                  const Text(
+                  Text(
                     'Logs',
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.w500,
-                      color: Color(0xFF3D4A28),
+                      color: titleColor,
                     ),
                   ),
                 ],
@@ -70,32 +60,42 @@ class LogsScreen extends StatelessWidget {
                 margin: const EdgeInsets.symmetric(horizontal: 16),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: containerColor,
                   borderRadius: BorderRadius.circular(22),
+                  border: isDarkMode
+                      ? Border.all(color: Colors.grey.shade800)
+                      : null,
                 ),
                 child: Column(
                   children: [
                     Padding(
                       padding: const EdgeInsets.only(bottom: 8.0),
                       child: Row(
-                        children: const [
-                          SizedBox(width: 24, child: Text("SL", style: TextStyle(fontWeight: FontWeight.bold))),
-                          SizedBox(width: 16),
-                          SizedBox(width: 100, child: Text("Date", style: TextStyle(fontWeight: FontWeight.bold))),
-                          SizedBox(width: 16),
-                          SizedBox(width: 50, child: Text("User", style: TextStyle(fontWeight: FontWeight.bold))),
-                          SizedBox(width: 16),
+                        children: [
+                          SizedBox(width: 24, child: Text("SL",
+                              style: TextStyle(fontWeight: FontWeight.bold, color: theme.textTheme.bodyLarge?.color))),
+                          const SizedBox(width: 16),
+                          SizedBox(width: 100, child: Text("Date",
+                              style: TextStyle(fontWeight: FontWeight.bold, color: theme.textTheme.bodyLarge?.color))),
+                          const SizedBox(width: 16),
+                          SizedBox(width: 50, child: Text("User",
+                              style: TextStyle(fontWeight: FontWeight.bold, color: theme.textTheme.bodyLarge?.color))),
+                          const SizedBox(width: 16),
                           Expanded(
-                            child: Text("Description", style: TextStyle(fontWeight: FontWeight.bold)),
+                            child: Text("Description",
+                                style: TextStyle(fontWeight: FontWeight.bold, color: theme.textTheme.bodyLarge?.color)),
                           ),
                         ],
                       ),
                     ),
-                    const Divider(),
+                    Divider(color: isDarkMode ? Colors.grey.shade700 : null),
                     Expanded(
                       child: ListView.separated(
                         itemCount: logs.length,
-                        separatorBuilder: (context, index) => const Divider(height: 20),
+                        separatorBuilder: (context, index) => Divider(
+                          height: 20,
+                          color: isDarkMode ? Colors.grey.shade700 : null,
+                        ),
                         itemBuilder: (context, index) {
                           final log = logs[index];
                           return Padding(
@@ -103,19 +103,22 @@ class LogsScreen extends StatelessWidget {
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                SizedBox(width: 24, child: Text('${index + 1}')),
+                                SizedBox(width: 24, child: Text('${index + 1}',
+                                    style: TextStyle(color: textColor))),
                                 const SizedBox(width: 16),
                                 SizedBox(
                                   width: 100,
-                                  child: Text(log['date'] ?? ''),
+                                  child: Text(log['date'] ?? '',
+                                      style: TextStyle(color: textColor)),
                                 ),
                                 const SizedBox(width: 16),
-                                SizedBox(width: 50, child: Text(log['user'] ?? '')),
+                                SizedBox(width: 50, child: Text(log['user'] ?? '',
+                                    style: TextStyle(color: textColor))),
                                 const SizedBox(width: 16),
                                 Expanded(
                                   child: Text(
                                     log['desc'] ?? '',
-                                    style: const TextStyle(color: Colors.black87),
+                                    style: TextStyle(color: textColor),
                                   ),
                                 ),
                               ],
@@ -131,28 +134,10 @@ class LogsScreen extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.white,
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: const Color(0xFF3D4A28),
-        unselectedItemColor: Colors.black54,
-        currentIndex: 2,
-        onTap: (index) {
-          if (index == 0) {
-            Navigator.pushNamed(context, '/explore');
-          } else if (index == 1) {
-            Navigator.pushNamed(context, '/qr-code');
-          } else if (index == 2) {
-          } else if (index == 3) {
-            Navigator.pushNamed(context, '/account');
-          }
-        },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.qr_code), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.edit_note), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.menu), label: ''),
-        ],
+      bottomNavigationBar: BottomNavigationHelper.buildBottomNavigation(
+        context,
+        BottomNavigationHelper.getCurrentIndex('/logs'),
+            (index) => BottomNavigationHelper.handleNavigation(context, index),
       ),
     );
   }

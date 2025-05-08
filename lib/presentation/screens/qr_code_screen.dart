@@ -1,26 +1,40 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../widgets/bottom_navigation_helper.dart';
 
 class ProductScanScreen extends StatelessWidget {
   const ProductScanScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final currentRoute = ModalRoute.of(context)?.settings.name ?? '/qr-code';
+    final currentIndex = BottomNavigationHelper.getCurrentIndex(currentRoute);
+
+    final ThemeData theme = Theme.of(context);
+    final bool isDarkMode = theme.brightness == Brightness.dark;
+
+    final Color primaryColor = const Color(0xFF3D4A28);
+    final Color appBarColor = isDarkMode ? theme.appBarTheme.backgroundColor ?? theme.primaryColor : const Color(0xFFF8F8F2);
+    final Color titleColor = isDarkMode ? Colors.white : primaryColor;
+    final Color subtitleColor = isDarkMode ? Colors.white70 : Colors.black54;
+    final Color iconColor = isDarkMode ? Colors.white : primaryColor;
+
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF8F8F2),
+        backgroundColor: appBarColor,
         elevation: 1,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF3D4A28)),
+          icon: Icon(Icons.arrow_back, color: titleColor),
           onPressed: () {
-            Navigator.pop(context);
+            Navigator.pushReplacementNamed(context, '/explore');
           },
         ),
-        title: const Text(
+        title: Text(
           'Product Scan',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: Color(0xFF3D4A28),
+            color: titleColor,
           ),
         ),
         centerTitle: true,
@@ -31,82 +45,79 @@ class ProductScanScreen extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 32.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: const [
-                SizedBox(height: 20),
+              children: [
+                const SizedBox(height: 20),
                 Text(
                   'PRODUCT SCAN',
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF3D4A28),
+                    color: titleColor,
                   ),
                   textAlign: TextAlign.center,
                 ),
-                SizedBox(height: 12),
+                const SizedBox(height: 12),
                 Text(
                   'Get detailed information about any product in just a few seconds by simply scanning its barcode. Fast and convenient!',
                   style: TextStyle(
                     fontSize: 14,
-                    color: Colors.black54,
+                    color: subtitleColor,
                   ),
                   textAlign: TextAlign.center,
                 ),
-                SizedBox(height: 40),
+                const SizedBox(height: 40),
                 Icon(
                   Icons.qr_code_2,
                   size: 220,
-                  color: Color(0xFF3D4A28),
+                  color: iconColor,
                 ),
-                SizedBox(height: 48),
-                DoneButton(),
-                SizedBox(height: 40),
+                const SizedBox(height: 48),
+                DoneButton(isDarkMode: isDarkMode),
+                const SizedBox(height: 40),
               ],
             ),
           ),
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: const Color(0xFF3D4A28),
-        unselectedItemColor: Colors.black54,
-        currentIndex: 1,
-        onTap: (index) {
-          if (index == 0) {
-            Navigator.pushNamed(context, '/explore');
-          } else if (index == 2) {
-            Navigator.pushNamed(context, '/logs');
-          } else if (index == 3) {
-            Navigator.pushNamed(context, '/signin');
-          }
-        },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.qr_code), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.edit_note), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.menu), label: ''),
-        ],
+      bottomNavigationBar: BottomNavigationHelper.buildBottomNavigation(
+        context,
+        currentIndex,
+            (index) => BottomNavigationHelper.handleNavigation(context, index),
       ),
     );
   }
 }
 
 class DoneButton extends StatelessWidget {
-  const DoneButton({super.key});
+  final bool isDarkMode;
+
+  const DoneButton({
+    super.key,
+    required this.isDarkMode,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final Color buttonColor = isDarkMode
+        ? const Color(0xFF556B3E)
+        : const Color(0xFF3D4A28);
+
+    final Color textColor = Colors.white;
+
     return ElevatedButton(
-      onPressed: () {},
+      onPressed: () {
+        // Functionality for the Done button here
+      },
       style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xFF3D4A28),
+        backgroundColor: buttonColor,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(40),
         ),
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
         minimumSize: const Size(double.infinity, 50),
-        elevation: 4,
+        elevation: isDarkMode ? 2 : 4,
       ),
-      child: const Row(
+      child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
@@ -114,11 +125,11 @@ class DoneButton extends StatelessWidget {
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,
-              color: Colors.white,
+              color: textColor,
             ),
           ),
-          SizedBox(width: 8),
-          Icon(Icons.arrow_forward, color: Colors.white),
+          const SizedBox(width: 8),
+          Icon(Icons.arrow_forward, color: textColor),
         ],
       ),
     );

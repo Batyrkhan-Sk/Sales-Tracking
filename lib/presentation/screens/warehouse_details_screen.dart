@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/warehouse.dart';
 import '../../services/api_service.dart';
+import '../widgets/bottom_navigation_helper.dart';
+import 'package:provider/provider.dart';
 
 class WarehouseDetailsScreen extends StatefulWidget {
   final Warehouse warehouse;
@@ -31,18 +33,9 @@ class _WarehouseDetailsScreenState extends State<WarehouseDetailsScreen>
     });
 
     try {
-      // Получаем детальную информацию о складе из API
-      // Предполагается, что у объекта warehouse есть id
       final warehouseDetails = await _apiService.fetchWarehouseDetails(widget.warehouse.id);
 
-      // В идеале, ваш API должен возвращать продукты, связанные с этим складом
-      // Здесь мы будем использовать данные, предоставленные в warehouses
-      // В будущем здесь должен быть отдельный вызов API для получения продуктов
-
-      // Временное решение для демонстрации
       setState(() {
-        // Предполагается, что у модели Warehouse есть поле products или аналогичное
-        // Если такого поля нет, этот код нужно будет адаптировать к вашей модели данных
         products = [
           {
             'name': 'Cotton armchair',
@@ -53,13 +46,13 @@ class _WarehouseDetailsScreenState extends State<WarehouseDetailsScreen>
           {
             'name': 'Wood table',
             'price': 349.99,
-            'imageUrl': warehouseDetails.imageUrl, // Используем то же изображение для демонстрации
+            'imageUrl': warehouseDetails.imageUrl,
             'category': 'Table',
           },
           {
             'name': 'Home decor set',
             'price': 129.99,
-            'imageUrl': warehouseDetails.imageUrl, // Используем то же изображение для демонстрации
+            'imageUrl': warehouseDetails.imageUrl,
             'category': 'Decor',
           },
         ];
@@ -69,7 +62,6 @@ class _WarehouseDetailsScreenState extends State<WarehouseDetailsScreen>
       setState(() {
         isLoading = false;
       });
-      // Показать ошибку пользователю
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error loading warehouse details: $e')),
       );
@@ -84,6 +76,9 @@ class _WarehouseDetailsScreenState extends State<WarehouseDetailsScreen>
 
   @override
   Widget build(BuildContext context) {
+    final currentRoute = ModalRoute.of(context)?.settings.name ?? '/explore';
+    final currentIndex = BottomNavigationHelper.getCurrentIndex(currentRoute);
+
     return Scaffold(
       body: NestedScrollView(
         headerSliverBuilder: (context, innerBoxIsScrolled) {
@@ -96,7 +91,7 @@ class _WarehouseDetailsScreenState extends State<WarehouseDetailsScreen>
               leading: IconButton(
                 icon: const Icon(Icons.arrow_back),
                 onPressed: () {
-                  Navigator.pop(context);
+                  Navigator.pushReplacementNamed(context, '/explore');
                 },
               ),
               title: Text(
@@ -112,13 +107,13 @@ class _WarehouseDetailsScreenState extends State<WarehouseDetailsScreen>
                 IconButton(
                   icon: const Icon(Icons.search),
                   onPressed: () {
-                    // Функциональность поиска
+                    // Search functionality
                   },
                 ),
                 IconButton(
                   icon: const Icon(Icons.shopping_cart),
                   onPressed: () {
-                    // Функциональность корзины
+                    // Cart functionality
                   },
                 ),
               ],
@@ -182,40 +177,10 @@ class _WarehouseDetailsScreenState extends State<WarehouseDetailsScreen>
           ],
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: const Color(0xFF3D4A28),
-        unselectedItemColor: Colors.black54,
-        currentIndex: 0,
-        onTap: (index) {
-          if (index == 0) {
-            Navigator.pushNamed(context, '/explore');
-          } else if (index == 1) {
-            Navigator.pushNamed(context, '/qr-code');
-          } else if (index == 2) {
-            Navigator.pushNamed(context, '/logs');
-          } else if (index == 3) {
-            Navigator.pushNamed(context, '/manage-roles');
-          }
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.qr_code),
-            label: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.edit_note),
-            label: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.menu),
-            label: '',
-          ),
-        ],
+      bottomNavigationBar: BottomNavigationHelper.buildBottomNavigation(
+        context,
+        currentIndex,
+            (index) => BottomNavigationHelper.handleNavigation(context, index),
       ),
     );
   }
@@ -229,7 +194,6 @@ class _WarehouseDetailsScreenState extends State<WarehouseDetailsScreen>
         ? products.where((product) => product['category'] == category).toList()
         : products;
 
-    // Добавляем пустые места, чтобы показать "Coming Soon"
     final List<Map<String, dynamic>> displayItems = [
       ...filteredProducts,
       if (filteredProducts.length < 3) {'isEmpty': true},
@@ -338,10 +302,8 @@ class _WarehouseDetailsScreenState extends State<WarehouseDetailsScreen>
   }
 
   Widget _buildProductImage(String imageUrl) {
-    // Проверяем, является ли imageUrl действительным URL
     bool isValidUrl = imageUrl.startsWith('http') || imageUrl.startsWith('https');
 
-    // Если это действительно URL, используем Image.network
     if (isValidUrl) {
       return Image.network(
         imageUrl,
@@ -371,7 +333,6 @@ class _WarehouseDetailsScreenState extends State<WarehouseDetailsScreen>
         },
       );
     }
-    // Если строка содержит "asset", используем Image.asset
     else if (imageUrl.contains('asset')) {
       return Image.asset(
         imageUrl,
@@ -380,7 +341,6 @@ class _WarehouseDetailsScreenState extends State<WarehouseDetailsScreen>
         fit: BoxFit.cover,
       );
     }
-    // В противном случае показываем заполнитель
     else {
       return Container(
         width: 100,

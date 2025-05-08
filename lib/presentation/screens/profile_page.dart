@@ -1,19 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../services/api_service.dart';
 import '../models/user.dart';
 import 'sign_in_screen.dart';
 import '../../providers/app_providers.dart';
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final apiService = ApiService();
+  State<ProfilePage> createState() => _ProfilePageState();
+}
 
+class _ProfilePageState extends State<ProfilePage> {
+  final ApiService _apiService = ApiService();
+
+  @override
+  Widget build(BuildContext context) {
     return FutureBuilder<bool>(
-      future: apiService.isLoggedIn(),
+      future: _apiService.isLoggedIn(),
       builder: (context, loginSnapshot) {
         if (loginSnapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
@@ -33,21 +39,9 @@ class ProfilePage extends StatelessWidget {
             actions: [
               if (!isGuestMode)
                 TextButton(
-                  onPressed: () async {
-                    try {
-                      await apiService.logout();
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => const SignInScreen()),
-                      );
-                    } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Logout failed: $e')),
-                      );
-                    }
-                  },
+                  onPressed: () => _logout(context),
                   child: Text(
-                    'Logout',
+                    AppLocalizations.of(context)!.logout,
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.error,
                       fontSize: 16,
@@ -80,7 +74,7 @@ class ProfilePage extends StatelessWidget {
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
-                                  'Guest Mode: Limited access',
+                                  AppLocalizations.of(context)!.guestModeLimitedAccess,
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     color: Colors.amber.shade900,
@@ -92,7 +86,7 @@ class ProfilePage extends StatelessWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Sign in to access all features including profile settings and personalization.',
+                            AppLocalizations.of(context)!.signInFeatures,
                             style: TextStyle(
                               color: Colors.amber.shade900,
                               fontSize: 14,
@@ -110,7 +104,7 @@ class ProfilePage extends StatelessWidget {
                               backgroundColor: Colors.amber.shade700,
                               foregroundColor: Colors.white,
                             ),
-                            child: const Text('Sign In'),
+                            child: Text(AppLocalizations.of(context)!.signIn),
                           ),
                         ],
                       ),
@@ -119,7 +113,7 @@ class ProfilePage extends StatelessWidget {
                   if (isGuestMode)
                     _buildGuestModeContent(context)
                   else
-                    _buildLoggedInContent(context, apiService),
+                    _buildLoggedInContent(context),
                 ],
               ),
             ),
@@ -147,7 +141,7 @@ class ProfilePage extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         Text(
-          'Guest User',
+          AppLocalizations.of(context)!.guestUser,
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
@@ -163,20 +157,12 @@ class ProfilePage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'App Settings',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
                 const SizedBox(height: 16),
                 Consumer<ThemeProvider>(
                   builder: (context, themeProvider, child) {
                     return ListTile(
                       title: Text(
-                        'Dark Mode',
+                        AppLocalizations.of(context)!.darkMode,
                         style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                       ),
                       trailing: Switch(
@@ -192,19 +178,19 @@ class ProfilePage extends StatelessWidget {
                   builder: (context, languageProvider, child) {
                     return ListTile(
                       title: Text(
-                        'Language',
+                        AppLocalizations.of(context)!.language,
                         style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                       ),
                       trailing: DropdownButton<Locale>(
                         value: languageProvider.locale,
-                        items: const [
+                        items: [
                           DropdownMenuItem(
-                            value: Locale('en', 'US'),
-                            child: Text('English'),
+                            value: const Locale('en', 'US'),
+                            child: Text(AppLocalizations.of(context)!.english),
                           ),
                           DropdownMenuItem(
-                            value: Locale('ru', 'RU'),
-                            child: Text('Russian'),
+                            value: const Locale('ru', 'RU'),
+                            child: Text(AppLocalizations.of(context)!.russian),
                           ),
                         ],
                         onChanged: (Locale? newLocale) {
@@ -226,9 +212,9 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _buildLoggedInContent(BuildContext context, ApiService apiService) {
+  Widget _buildLoggedInContent(BuildContext context) {
     return FutureBuilder<User?>(
-      future: apiService.getCurrentUser(),
+      future: _apiService.getCurrentUser(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -238,7 +224,7 @@ class ProfilePage extends StatelessWidget {
               Icon(Icons.error_outline, size: 48, color: Theme.of(context).colorScheme.error),
               const SizedBox(height: 16),
               Text(
-                'Unable to load user data',
+                AppLocalizations.of(context)!.unableToLoadUserData,
                 style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
               const SizedBox(height: 8),
@@ -249,13 +235,16 @@ class ProfilePage extends StatelessWidget {
                     MaterialPageRoute(builder: (context) => const SignInScreen()),
                   );
                 },
-                child: const Text('Return to Login'),
+                child: Text(AppLocalizations.of(context)!.returnToLogin),
               ),
             ],
           );
         }
 
         final user = snapshot.data!;
+        final localizations = AppLocalizations.of(context)!;
+        final isRussian = Localizations.localeOf(context).languageCode == 'ru';
+
         return Column(
           children: [
             Container(
@@ -277,7 +266,9 @@ class ProfilePage extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              '${user.role} user',
+              isRussian
+                  ? localizations.administratorRole
+                  : '${localizations.administratorRole} ${localizations.user}',
               style: TextStyle(
                 fontSize: 16,
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -292,20 +283,12 @@ class ProfilePage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'App Settings',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                    ),
                     const SizedBox(height: 16),
                     Consumer<ThemeProvider>(
                       builder: (context, themeProvider, child) {
                         return ListTile(
                           title: Text(
-                            'Dark Mode',
+                            localizations.darkMode,
                             style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                           ),
                           trailing: Switch(
@@ -321,19 +304,19 @@ class ProfilePage extends StatelessWidget {
                       builder: (context, languageProvider, child) {
                         return ListTile(
                           title: Text(
-                            'Language',
+                            localizations.language,
                             style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                           ),
                           trailing: DropdownButton<Locale>(
                             value: languageProvider.locale,
-                            items: const [
+                            items: [
                               DropdownMenuItem(
-                                value: Locale('en', 'US'),
-                                child: Text('English'),
+                                value: const Locale('en', 'US'),
+                                child: Text(localizations.english),
                               ),
                               DropdownMenuItem(
-                                value: Locale('ru', 'RU'),
-                                child: Text('Russian'),
+                                value: const Locale('ru', 'RU'),
+                                child: Text(localizations.russian),
                               ),
                             ],
                             onChanged: (Locale? newLocale) {
@@ -362,7 +345,7 @@ class ProfilePage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Account info',
+                      localizations.accountInfo,
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -374,7 +357,7 @@ class ProfilePage extends StatelessWidget {
                       enabled: false,
                       controller: TextEditingController(text: user.fullName),
                       decoration: InputDecoration(
-                        labelText: 'Name',
+                        labelText: localizations.name,
                         hintText: 'Enter...',
                         hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
                         labelStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface),
@@ -394,7 +377,7 @@ class ProfilePage extends StatelessWidget {
                       enabled: false,
                       controller: TextEditingController(text: user.email),
                       decoration: InputDecoration(
-                        labelText: 'Email',
+                        labelText: localizations.email,
                         hintText: 'Enter...',
                         hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
                         labelStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface),
@@ -414,7 +397,7 @@ class ProfilePage extends StatelessWidget {
                       enabled: false,
                       controller: TextEditingController(text: ''),
                       decoration: InputDecoration(
-                        labelText: 'Phone',
+                        labelText: localizations.phone,
                         hintText: 'Enter...',
                         hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
                         labelStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface),
@@ -437,5 +420,23 @@ class ProfilePage extends StatelessWidget {
         );
       },
     );
+  }
+
+  Future<void> _logout(BuildContext context) async {
+    try {
+      await _apiService.logout();
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const SignInScreen()),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Logout failed: $e')),
+        );
+      }
+    }
   }
 }

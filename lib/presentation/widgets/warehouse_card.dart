@@ -92,11 +92,9 @@ class WarehouseCard extends StatelessWidget {
   }
 
   Widget _buildImage() {
-    // Проверяем, является ли imageUrl действительным URL
     bool isValidUrl = warehouse.imageUrl.startsWith('http') ||
         warehouse.imageUrl.startsWith('https');
 
-    // Если это действительно URL, используем Image.network
     if (isValidUrl) {
       return Image.network(
         warehouse.imageUrl,
@@ -126,7 +124,6 @@ class WarehouseCard extends StatelessWidget {
         },
       );
     }
-    // Если строка содержит "asset", используем Image.asset
     else if (warehouse.imageUrl.contains('asset')) {
       return Image.asset(
         warehouse.imageUrl,
@@ -135,7 +132,6 @@ class WarehouseCard extends StatelessWidget {
         fit: BoxFit.cover,
       );
     }
-    // В противном случае показываем заполнитель
     else {
       return Container(
         width: 120,

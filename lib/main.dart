@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'presentation/screens/explore_screen.dart';
 import 'presentation/screens/sign_in_screen.dart';
 import 'presentation/screens/sign_up_screen.dart';
@@ -23,7 +24,6 @@ void main() async {
   final apiService = ApiService();
   final isLoggedIn = await apiService.isLoggedIn();
 
-  // Allow all orientations
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
@@ -47,13 +47,12 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => LanguageProvider()),
         ChangeNotifierProvider(create: (_) {
           final guestModeProvider = GuestModeProvider();
-          guestModeProvider.setGuestMode(!initialLoggedIn); // Sync initial state
+          guestModeProvider.setGuestMode(!initialLoggedIn);
           return guestModeProvider;
         }),
       ],
       child: Consumer2<ThemeProvider, LanguageProvider>(
         builder: (context, themeProvider, languageProvider, child) {
-          // Define routes outside onGenerateRoute for reuse
           final routes = {
             '/account': (context) => const AccountScreen(),
             '/explore': (context) => const ExploreScreen(),
@@ -90,15 +89,15 @@ class MyApp extends StatelessWidget {
               Locale('ru', 'RU'),
             ],
             localizationsDelegates: const [
+              AppLocalizations.delegate,
               GlobalMaterialLocalizations.delegate,
               GlobalWidgetsLocalizations.delegate,
               GlobalCupertinoLocalizations.delegate,
             ],
-            initialRoute: initialLoggedIn ? '/account' : '/explore',
+            initialRoute: '/signin',
             onGenerateRoute: (routeSettings) {
               final guestModeProvider = Provider.of<GuestModeProvider>(context, listen: false);
 
-              // Block restricted routes in Guest Mode
               if (guestModeProvider.isGuestMode &&
                   (routeSettings.name == '/profile' || routeSettings.name == '/account')) {
                 return MaterialPageRoute(
@@ -124,31 +123,10 @@ class MyApp extends StatelessWidget {
                 );
               }
 
-              // Default route handling
               return MaterialPageRoute(
                 builder: routes[routeSettings.name] ?? (context) => const ExploreScreen(),
               );
             },
-            home: Builder(
-              builder: (context) {
-                final guestModeProvider = Provider.of<GuestModeProvider>(context);
-                return Scaffold(
-                  body: Column(
-                    children: [
-                      if (guestModeProvider.showGuestBanner)
-                        GuestModeBanner(showDismiss: true), // Global banner
-                      Expanded(
-                        child: Navigator(
-                          onGenerateRoute: (routeSettings) => MaterialPageRoute(
-                            builder: (context) => routes[initialLoggedIn ? '/account' : '/explore']!(context),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
           );
         },
       ),

@@ -88,8 +88,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                       style: const TextStyle(fontFamily: 'TTTravels', fontSize: 14),
                       validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your full name';
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Full name is required';
+                        }
+                        if (value.trim().length < 2) {
+                          return 'Full name must be at least 2 characters';
+                        }
+                        if (!RegExp(r'^[a-zA-Z\s]+$').hasMatch(value.trim())) {
+                          return 'Full name should only contain letters and spaces';
                         }
                         return null;
                       },
@@ -127,10 +133,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       style: const TextStyle(fontFamily: 'TTTravels', fontSize: 14),
                       keyboardType: TextInputType.emailAddress,
                       validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your email';
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Email is required';
                         }
-                        if (!RegExp(r'^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                        if (!RegExp(r'^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value.trim())) {
                           return 'Please enter a valid email';
                         }
                         return null;
@@ -180,10 +186,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       obscureText: !_isPasswordVisible,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please enter a password';
+                          return 'Password is required';
                         }
                         if (value.length < 8) {
-                          return 'Password must contain at least 8 characters';
+                          return 'Password must be at least 8 characters';
+                        }
+                        if (!RegExp(r'^(?=.*[A-Z])(?=.*[0-9]).*$').hasMatch(value)) {
+                          return 'Password must contain at least one uppercase letter and one number';
                         }
                         return null;
                       },
@@ -240,34 +249,36 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   Future<void> _submitForm() async {
     if (_formKey.currentState!.validate()) {
-      try {
-        setState(() {
-          _isLoading = true;
-        });
+      setState(() {
+        _isLoading = true;
+      });
 
+      try {
         final fullName = _fullNameController.text.trim();
         final email = _emailController.text.trim();
         final password = _passwordController.text;
 
-        // Create user object
         final user = User(
           fullName: fullName,
           email: email,
           password: password,
         );
 
-        // Send registration request
         final response = await _apiService.registerUser(user);
 
-        // Show success message
+        if (response.id == null || response.id == 'unknown') {
+          throw Exception('Failed to register user: Invalid user ID');
+        }
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Account created successfully!'),
-              backgroundColor: Colors.green,),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 3),
+            ),
           );
 
-          // Navigate to sign-in screen
           Navigator.pushNamedAndRemoveUntil(
             context,
             '/signin',
@@ -275,21 +286,23 @@ class _SignUpScreenState extends State<SignUpScreen> {
           );
         }
       } catch (error) {
-        // Parse and display a more user-friendly error message
-        String errorMessage = error.toString();
-
-        // Check for email already registered error
-        if (errorMessage.toLowerCase().contains('email already registered')) {
-          errorMessage = 'This email is already registered. Please use a different email or sign in.';
-        } else if (errorMessage.contains("type 'Null' is not a subtype of type 'String'")) {
-          errorMessage = 'Registration failed. Please check your information and try again.';
-        }
-        // Show error message
         if (mounted) {
+          String errorMessage;
+          if (error.toString().contains('email already registered') || error.toString().contains('409')) {
+            errorMessage = 'This email is already registered. Please use a different email.';
+          } else if (error.toString().contains('network')) {
+            errorMessage = 'Network error. Please check your connection and try again.';
+          } else if (error.toString().contains('timeout')) {
+            errorMessage = 'Request timed out. Please try again later.';
+          } else {
+            errorMessage = 'Registration failed: ${error.toString()}';
+          }
+
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(errorMessage),
               backgroundColor: Colors.red,
+              duration: const Duration(seconds: 3),
             ),
           );
         }

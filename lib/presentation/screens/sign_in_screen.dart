@@ -88,10 +88,10 @@ class _SignInScreenState extends State<SignInScreen> {
                       style: const TextStyle(fontFamily: 'TTTravels', fontSize: 14),
                       keyboardType: TextInputType.emailAddress,
                       validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your email';
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Email is required';
                         }
-                        if (!RegExp(r'^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                        if (!RegExp(r'^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value.trim())) {
                           return 'Please enter a valid email';
                         }
                         return null;
@@ -141,10 +141,13 @@ class _SignInScreenState extends State<SignInScreen> {
                       obscureText: !_isPasswordVisible,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please enter your password';
+                          return 'Password is required';
                         }
                         if (value.length < 8) {
-                          return 'Password must contain at least 8 characters';
+                          return 'Password must be at least 8 characters';
+                        }
+                        if (!RegExp(r'^(?=.*[A-Z])(?=.*[0-9]).*$').hasMatch(value)) {
+                          return 'Password must contain at least one uppercase letter and one number';
                         }
                         return null;
                       },
@@ -155,7 +158,6 @@ class _SignInScreenState extends State<SignInScreen> {
                     alignment: Alignment.centerLeft,
                     child: TextButton(
                       onPressed: () {
-                        // TODO: Forgot password functionality
                         debugPrint('Forgot password pressed');
                       },
                       style: TextButton.styleFrom(
@@ -218,7 +220,6 @@ class _SignInScreenState extends State<SignInScreen> {
                     child: TextButton(
                       onPressed: () {
                         Provider.of<GuestModeProvider>(context, listen: false).setGuestMode(true);
-
                         Navigator.pushNamedAndRemoveUntil(
                           context,
                           '/explore',
@@ -246,28 +247,35 @@ class _SignInScreenState extends State<SignInScreen> {
 
   Future<void> _signIn() async {
     if (_formKey.currentState!.validate()) {
-      try {
-        setState(() {
-          _isLoading = true;
-        });
+      setState(() {
+        _isLoading = true;
+      });
 
+      try {
         final email = _emailController.text.trim();
         final password = _passwordController.text;
 
         final loginResponse = await _apiService.loginUser(email, password);
 
-        final token = loginResponse['token'];
+        if (loginResponse['token'] == null) {
+          throw Exception('Invalid response from server');
+        }
 
+        final token = loginResponse['token'];
+        final user = loginResponse['user'];
+
+        if (user == null || user['id'] == null || user['fullName'] == null || user['email'] == null) {
+          throw Exception('User data is incomplete');
+        }
 
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('token', token);
-        await prefs.setString('userId', loginResponse['user']['id']);
-        await prefs.setString('fullName', loginResponse['user']['fullName']);
-        await prefs.setString('email', loginResponse['user']['email']);
+        await prefs.setString('userId', user['id']);
+        await prefs.setString('fullName', user['fullName']);
+        await prefs.setString('email', user['email']);
 
         if (mounted) {
           Provider.of<GuestModeProvider>(context, listen: false).setGuestMode(false);
-
           Navigator.pushNamedAndRemoveUntil(
             context,
             '/explore',
@@ -276,10 +284,22 @@ class _SignInScreenState extends State<SignInScreen> {
         }
       } catch (error) {
         if (mounted) {
+          String errorMessage;
+          if (error.toString().contains('401')) {
+            errorMessage = 'Invalid email or password';
+          } else if (error.toString().contains('network')) {
+            errorMessage = 'Network error. Please check your connection and try again';
+          } else if (error.toString().contains('timeout')) {
+            errorMessage = 'Request timed out. Please try again later';
+          } else {
+            errorMessage = 'Login failed: ${error.toString()}';
+          }
+
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Login failed: ${error.toString()}'),
+              content: Text(errorMessage),
               backgroundColor: Colors.red,
+              duration: const Duration(seconds: 3),
             ),
           );
         }

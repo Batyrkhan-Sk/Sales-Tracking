@@ -5,14 +5,12 @@ import '../presentation/models/warehouse.dart';
 import '../presentation/models/user.dart';
 
 class ApiService {
-  final String baseUrl = 'my_api';
+final String baseUrl = 'my_api';
 
-  // Add this development flag to bypass actual API calls
-  final bool devMode = true; // Set to false when you want to use real API
+  final bool devMode = true;
 
   Future<List<Warehouse>> fetchWarehouses() async {
     if (devMode) {
-      // Return mock data in development mode
       return [
         Warehouse(
           id: '1',
@@ -51,7 +49,6 @@ class ApiService {
 
   Future<Warehouse> fetchWarehouseDetails(String id) async {
     if (devMode) {
-      // Return mock detail data
       return Warehouse(
         id: id,
         name: 'Mock Warehouse Detail',
@@ -84,8 +81,7 @@ class ApiService {
 
   Future<User> registerUser(User user) async {
     if (devMode) {
-      // Return a mock successful registration response
-      await Future.delayed(Duration(milliseconds: 500)); // Simulate network delay
+      await Future.delayed(Duration(milliseconds: 500));
       return User(
         id: 'mock-user-id',
         fullName: user.fullName,
@@ -105,7 +101,6 @@ class ApiService {
       );
 
       if (response.statusCode == 201) {
-        // Successful registration
         final responseData = jsonDecode(response.body);
         return User(
           id: responseData['id'] ?? 'unknown',
@@ -113,7 +108,6 @@ class ApiService {
           email: responseData['email'] ?? user.email,
         );
       } else {
-        // Handle server errors
         final errorData = jsonDecode(response.body);
         if (errorData.containsKey('message')) {
           throw errorData['message'];
@@ -131,8 +125,7 @@ class ApiService {
 
   Future<Map<String, dynamic>> loginUser(String email, String password) async {
     if (devMode) {
-      // Return a mock successful login response
-      await Future.delayed(Duration(milliseconds: 500)); // Simulate network delay
+      await Future.delayed(Duration(milliseconds: 500));
       return {
         'user': {
           'id': 'mock-user-id',
@@ -172,8 +165,7 @@ class ApiService {
 
   Future<User> getCurrentUser() async {
     if (devMode) {
-      // Return mock user data in development mode
-      await Future.delayed(Duration(milliseconds: 500)); // Simulate network delay
+      await Future.delayed(Duration(milliseconds: 500));
       return User(
         id: 'mock-user-id',
         fullName: 'Amir Syrimbetov',
@@ -183,11 +175,9 @@ class ApiService {
     }
 
     try {
-      // Assuming you store the token after login (e.g., in shared_preferences)
-      // For now, using a mock token; replace with actual token retrieval logic
       final String token = 'mock-jwt-token-for-development';
       final response = await http.get(
-        Uri.parse('$baseUrl/users/me'), // Typical endpoint for current user
+        Uri.parse('$baseUrl/users/me'),
         headers: {'Authorization': 'Bearer $token'},
       );
 
@@ -204,14 +194,12 @@ class ApiService {
 
   Future<void> logout() async {
     if (devMode) {
-      // Simulate logout in development mode
-      await Future.delayed(Duration(milliseconds: 500)); // Simulate network delay
+      await Future.delayed(Duration(milliseconds: 500));
       return;
     }
 
     try {
-      // In production, assuming you store the token (e.g., in shared_preferences)
-      final String token = 'mock-jwt-token-for-development'; // Replace with actual token retrieval
+      final String token = 'mock-jwt-token-for-development';
       final response = await http.post(
         Uri.parse('$baseUrl/users/logout'),
         headers: {
@@ -223,7 +211,6 @@ class ApiService {
       if (response.statusCode != 200) {
         throw Exception('Failed to logout: ${response.statusCode}');
       }
-      // Clear the stored token
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('token');
     } catch (e) {
@@ -231,7 +218,6 @@ class ApiService {
     }
   }
 
-  // New method to check login status
   Future<bool> isLoggedIn() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('token') != null;

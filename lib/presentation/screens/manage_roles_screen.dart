@@ -45,18 +45,18 @@ class _ManageRolesScreenState extends State<ManageRolesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F8F2),
+      backgroundColor: const Color(0xFF1A1A1A),
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF8F8F2),
+        backgroundColor: const Color(0xFF222222),
         elevation: 1,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
           'Manage roles',
           style: TextStyle(
-            color: Color(0xFF37421F),
+            color: Color(0xFFB8C7A1),
             fontWeight: FontWeight.bold,
             fontSize: 20,
           ),
@@ -72,7 +72,7 @@ class _ManageRolesScreenState extends State<ManageRolesScreen> {
               'Share',
               style: TextStyle(
                 fontSize: 18,
-                color: Color(0xFF37421F),
+                color: Color(0xFFB8C7A1),
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -82,12 +82,25 @@ class _ManageRolesScreenState extends State<ManageRolesScreen> {
                 Expanded(
                   child: TextFormField(
                     controller: _emailController,
+                    style: const TextStyle(color: Colors.white),
                     decoration: InputDecoration(
                       hintText: 'email@example.com',
+                      hintStyle: const TextStyle(color: Colors.grey),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(color: Color(0xFF444444)),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(color: Color(0xFF444444)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: const BorderSide(color: Color(0xFF6A8B39)),
                       ),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                      fillColor: const Color(0xFF2A2A2A),
+                      filled: true,
                     ),
                   ),
                 ),
@@ -95,16 +108,18 @@ class _ManageRolesScreenState extends State<ManageRolesScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.black38),
+                    color: const Color(0xFF2A2A2A),
+                    border: Border.all(color: const Color(0xFF444444)),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
                       value: _selectedRole,
+                      dropdownColor: const Color(0xFF2A2A2A),
                       items: roles
                           .map((role) => DropdownMenuItem(
                         value: role,
-                        child: Text(role),
+                        child: Text(role, style: const TextStyle(color: Colors.white)),
                       ))
                           .toList(),
                       onChanged: (value) {
@@ -112,6 +127,7 @@ class _ManageRolesScreenState extends State<ManageRolesScreen> {
                           setState(() => _selectedRole = value);
                         }
                       },
+                      icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
                     ),
                   ),
                 ),
@@ -122,7 +138,7 @@ class _ManageRolesScreenState extends State<ManageRolesScreen> {
               width: double.infinity,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF3D4D1A),
+                  backgroundColor: const Color(0xFF6A8B39),
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
@@ -138,7 +154,7 @@ class _ManageRolesScreenState extends State<ManageRolesScreen> {
               'Members of storage app',
               style: TextStyle(
                 fontSize: 16,
-                color: Color(0xFF37421F),
+                color: Color(0xFFB8C7A1),
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -171,33 +187,42 @@ class _ManageRolesScreenState extends State<ManageRolesScreen> {
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
-          const CircleAvatar(radius: 20, backgroundColor: Colors.grey),
+          const CircleAvatar(
+            radius: 20,
+            backgroundColor: Color(0xFF444444),
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               name,
-              style: const TextStyle(fontSize: 16, color: Color(0xFF37421F)),
+              style: const TextStyle(fontSize: 16, color: Colors.white),
             ),
           ),
           if (!isCurrentUser)
             IconButton(
-              icon: const Icon(Icons.delete_outline, color: Colors.black),
+              icon: const Icon(Icons.delete_outline, color: Colors.white70),
               onPressed: onDelete,
             ),
           const SizedBox(width: 4),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8),
             decoration: BoxDecoration(
-              border: Border.all(color: Colors.black38),
+              color: const Color(0xFF2A2A2A),
+              border: Border.all(color: const Color(0xFF444444)),
               borderRadius: BorderRadius.circular(8),
             ),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
                 value: role,
+                dropdownColor: const Color(0xFF2A2A2A),
                 items: ['Admin', 'Moderator', 'Worker']
-                    .map((r) => DropdownMenuItem(value: r, child: Text(r)))
+                    .map((r) => DropdownMenuItem(
+                  value: r,
+                  child: Text(r, style: const TextStyle(color: Colors.white)),
+                ))
                     .toList(),
                 onChanged: onRoleChanged,
+                icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
               ),
             ),
           ),
