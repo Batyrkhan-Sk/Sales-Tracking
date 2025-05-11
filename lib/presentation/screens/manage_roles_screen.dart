@@ -8,12 +8,12 @@ class ManageRolesScreen extends StatefulWidget {
 }
 
 class _ManageRolesScreenState extends State<ManageRolesScreen> {
-  final List<String> roles = const ['Admin', 'Moderator', 'Worker'];
+  final List<String> roles = const ['Admin', 'Moderator', 'Manager'];
   final TextEditingController _emailController = TextEditingController();
   String _selectedRole = 'Admin';
   List<Map<String, dynamic>> members = [
     {'name': 'Amir Syrymbetov (you)', 'role': 'Admin', 'isCurrentUser': true},
-    {'name': 'Temirkhanov Tamerlan', 'role': 'Worker', 'isCurrentUser': false},
+    {'name': 'Temirkhanov Tamerlan', 'role': 'Manager', 'isCurrentUser': false},
   ];
 
   @override
@@ -44,19 +44,32 @@ class _ManageRolesScreenState extends State<ManageRolesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    final isDarkMode = brightness == Brightness.dark;
+
+    final backgroundColor = isDarkMode ? const Color(0xFF1A1A1A) : const Color(0xFFF8F8F2);
+    final appBarColor = isDarkMode ? const Color(0xFF222222) : const Color(0xFFF8F8F2);
+    final textColor = isDarkMode ? const Color(0xFFB8C7A1) : const Color(0xFF37421F);
+    final buttonColor = isDarkMode ? const Color(0xFF6A8B39) : const Color(0xFF3D4D1A);
+    final iconColor = isDarkMode ? Colors.white : Colors.black;
+    final borderColor = isDarkMode ? const Color(0xFF444444) : Colors.black38;
+    final inputFillColor = isDarkMode ? const Color(0xFF2A2A2A) : Colors.white;
+    final inputTextColor = isDarkMode ? Colors.white : Colors.black;
+    final avatarColor = isDarkMode ? const Color(0xFF444444) : Colors.grey;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF1A1A1A),
+      backgroundColor: backgroundColor,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF222222),
+        backgroundColor: appBarColor,
         elevation: 1,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: iconColor),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: Text(
           'Manage roles',
           style: TextStyle(
-            color: Color(0xFFB8C7A1),
+            color: textColor,
             fontWeight: FontWeight.bold,
             fontSize: 20,
           ),
@@ -68,11 +81,11 @@ class _ManageRolesScreenState extends State<ManageRolesScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Share',
               style: TextStyle(
                 fontSize: 18,
-                color: Color(0xFFB8C7A1),
+                color: textColor,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -82,24 +95,24 @@ class _ManageRolesScreenState extends State<ManageRolesScreen> {
                 Expanded(
                   child: TextFormField(
                     controller: _emailController,
-                    style: const TextStyle(color: Colors.white),
+                    style: TextStyle(color: inputTextColor),
                     decoration: InputDecoration(
                       hintText: 'email@example.com',
-                      hintStyle: const TextStyle(color: Colors.grey),
+                      hintStyle: TextStyle(color: isDarkMode ? Colors.grey : Colors.black54),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(color: Color(0xFF444444)),
+                        borderSide: BorderSide(color: borderColor),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(color: Color(0xFF444444)),
+                        borderSide: BorderSide(color: borderColor),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(color: Color(0xFF6A8B39)),
+                        borderSide: BorderSide(color: buttonColor),
                       ),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-                      fillColor: const Color(0xFF2A2A2A),
+                      fillColor: inputFillColor,
                       filled: true,
                     ),
                   ),
@@ -108,18 +121,18 @@ class _ManageRolesScreenState extends State<ManageRolesScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2A2A2A),
-                    border: Border.all(color: const Color(0xFF444444)),
+                    color: inputFillColor,
+                    border: Border.all(color: borderColor),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
                       value: _selectedRole,
-                      dropdownColor: const Color(0xFF2A2A2A),
+                      dropdownColor: inputFillColor,
                       items: roles
                           .map((role) => DropdownMenuItem(
                         value: role,
-                        child: Text(role, style: const TextStyle(color: Colors.white)),
+                        child: Text(role, style: TextStyle(color: inputTextColor)),
                       ))
                           .toList(),
                       onChanged: (value) {
@@ -127,7 +140,7 @@ class _ManageRolesScreenState extends State<ManageRolesScreen> {
                           setState(() => _selectedRole = value);
                         }
                       },
-                      icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
+                      icon: Icon(Icons.arrow_drop_down, color: iconColor),
                     ),
                   ),
                 ),
@@ -138,7 +151,7 @@ class _ManageRolesScreenState extends State<ManageRolesScreen> {
               width: double.infinity,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF6A8B39),
+                  backgroundColor: buttonColor,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
@@ -150,11 +163,11 @@ class _ManageRolesScreenState extends State<ManageRolesScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            const Text(
+            Text(
               'Members of storage app',
               style: TextStyle(
                 fontSize: 16,
-                color: Color(0xFFB8C7A1),
+                color: textColor,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -169,6 +182,12 @@ class _ManageRolesScreenState extends State<ManageRolesScreen> {
                 isCurrentUser: member['isCurrentUser'],
                 onDelete: () => _deleteMember(index),
                 onRoleChanged: (newRole) => _updateRole(index, newRole),
+                isDarkMode: isDarkMode,
+                textColor: inputTextColor,
+                borderColor: borderColor,
+                inputFillColor: inputFillColor,
+                iconColor: iconColor,
+                avatarColor: avatarColor,
               );
             }),
           ],
@@ -177,52 +196,57 @@ class _ManageRolesScreenState extends State<ManageRolesScreen> {
     );
   }
 
-  Widget _buildMemberItem(BuildContext context,
-      {required String name,
+  Widget _buildMemberItem(
+      BuildContext context, {
+        required String name,
         required String role,
         required bool isCurrentUser,
+        required bool isDarkMode,
+        required Color textColor,
+        required Color borderColor,
+        required Color inputFillColor,
+        required Color iconColor,
+        required Color avatarColor,
         VoidCallback? onDelete,
-        ValueChanged<String?>? onRoleChanged}) {
+        ValueChanged<String?>? onRoleChanged,
+      }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
-          const CircleAvatar(
-            radius: 20,
-            backgroundColor: Color(0xFF444444),
-          ),
+          CircleAvatar(radius: 20, backgroundColor: avatarColor),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               name,
-              style: const TextStyle(fontSize: 16, color: Colors.white),
+              style: TextStyle(fontSize: 16, color: textColor),
             ),
           ),
           if (!isCurrentUser)
             IconButton(
-              icon: const Icon(Icons.delete_outline, color: Colors.white70),
+              icon: Icon(Icons.delete_outline, color: isDarkMode ? Colors.white70 : Colors.black87),
               onPressed: onDelete,
             ),
           const SizedBox(width: 4),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8),
             decoration: BoxDecoration(
-              color: const Color(0xFF2A2A2A),
-              border: Border.all(color: const Color(0xFF444444)),
+              color: inputFillColor,
+              border: Border.all(color: borderColor),
               borderRadius: BorderRadius.circular(8),
             ),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
                 value: role,
-                dropdownColor: const Color(0xFF2A2A2A),
-                items: ['Admin', 'Moderator', 'Worker']
+                dropdownColor: inputFillColor,
+                items: ['Admin', 'Moderator', 'Manager']
                     .map((r) => DropdownMenuItem(
                   value: r,
-                  child: Text(r, style: const TextStyle(color: Colors.white)),
+                  child: Text(r, style: TextStyle(color: textColor)),
                 ))
                     .toList(),
                 onChanged: onRoleChanged,
-                icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
+                icon: Icon(Icons.arrow_drop_down, color: iconColor),
               ),
             ),
           ),
