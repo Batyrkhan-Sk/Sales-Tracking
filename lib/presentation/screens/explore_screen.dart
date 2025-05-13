@@ -86,15 +86,15 @@ class _ExploreScreenState extends State<ExploreScreen> {
       body: Column(
         children: [
           const GuestModeBanner(),
-
           Expanded(
             child: FutureBuilder<List<Warehouse>>(
               future: _warehousesFuture,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator(
-                    color: isDarkMode ? Colors.white : primaryColor,
-                  ));
+                  return Center(
+                      child: CircularProgressIndicator(
+                        color: isDarkMode ? Colors.white : primaryColor,
+                      ));
                 } else if (snapshot.hasError) {
                   return _buildErrorWidget(
                     'Failed to load warehouses',

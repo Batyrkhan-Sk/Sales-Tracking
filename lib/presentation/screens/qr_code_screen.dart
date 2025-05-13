@@ -23,12 +23,6 @@ class ProductScanScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: appBarColor,
         elevation: 1,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: titleColor),
-          onPressed: () {
-            Navigator.pushReplacementNamed(context, '/explore');
-          },
-        ),
         title: Text(
           'Product Scan',
           style: TextStyle(
@@ -38,6 +32,7 @@ class ProductScanScreen extends StatelessWidget {
           ),
         ),
         centerTitle: true,
+        // Убираем leading, чтобы не было стрелки "назад"
       ),
       body: SafeArea(
         child: Center(

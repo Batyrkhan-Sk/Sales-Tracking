@@ -36,13 +36,6 @@ class LogsScreen extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16),
               child: Row(
                 children: [
-                  IconButton(
-                    icon: Icon(Icons.arrow_back, color: titleColor),
-                    onPressed: () {
-                      Navigator.pushReplacementNamed(context, '/explore');
-                    },
-                  ),
-                  const SizedBox(width: 8),
                   Text(
                     'Logs',
                     style: TextStyle(
@@ -54,7 +47,6 @@ class LogsScreen extends StatelessWidget {
                 ],
               ),
             ),
-
             Expanded(
               child: Container(
                 margin: const EdgeInsets.symmetric(horizontal: 16),

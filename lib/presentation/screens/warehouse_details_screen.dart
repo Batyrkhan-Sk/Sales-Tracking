@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/warehouse.dart';
 import '../../services/api_service.dart';
 import '../widgets/bottom_navigation_helper.dart';
-import 'package:provider/provider.dart';
+import 'product_details_screen.dart'; // Импортируем ProductDetailsScreen
 
 class WarehouseDetailsScreen extends StatefulWidget {
   final Warehouse warehouse;
@@ -40,19 +41,19 @@ class _WarehouseDetailsScreenState extends State<WarehouseDetailsScreen>
           {
             'name': 'Cotton armchair',
             'price': 259.99,
-            'imageUrl': warehouseDetails.imageUrl,
+            'imageUrl': 'assets/images/armchair.png',
             'category': 'Chair',
           },
           {
             'name': 'Wood table',
             'price': 349.99,
-            'imageUrl': warehouseDetails.imageUrl,
+            'imageUrl': 'assets/images/table.png',
             'category': 'Table',
           },
           {
             'name': 'Home decor set',
             'price': 129.99,
-            'imageUrl': warehouseDetails.imageUrl,
+            'imageUrl': 'assets/images/cabinet.png',
             'category': 'Decor',
           },
         ];
@@ -233,8 +234,8 @@ class _WarehouseDetailsScreenState extends State<WarehouseDetailsScreen>
                   ),
                   const SizedBox(width: 12),
                   Container(
-                    width: 100,
-                    height: 100,
+                    width: 150,
+                    height: 200,
                     decoration: BoxDecoration(
                       color: Colors.grey[300],
                       borderRadius: BorderRadius.circular(12),
@@ -255,44 +256,59 @@ class _WarehouseDetailsScreenState extends State<WarehouseDetailsScreen>
             ),
           );
         } else {
-          return Card(
-            elevation: 2,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            child: Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          item['name'],
-                          style: const TextStyle(
-                            fontFamily: 'TTTravels',
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFF3D4A28),
+          return GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ProductDetailsScreen(product: item),
+                ),
+              );
+            },
+            child: Card(
+              elevation: 2,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            item['name'],
+                            style: const TextStyle(
+                              fontFamily: 'TTTravels',
+                              fontSize: 18,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF3D4A28),
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '\$${item['price'].toStringAsFixed(2)}',
-                          style: const TextStyle(
-                            fontFamily: 'TTTravels',
-                            fontSize: 14,
-                            color: Colors.black54,
+                          const SizedBox(height: 8),
+                          Text(
+                            '\$${item['price'].toStringAsFixed(2)}',
+                            style: const TextStyle(
+                              fontFamily: 'TTTravels',
+                              fontSize: 16,
+                              color: Colors.black54,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: _buildProductImage(item['imageUrl']),
-                  ),
-                ],
+                    const SizedBox(width: 16),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        width: 150,
+                        height: 200,
+                        child: _buildProductImage(item['imageUrl']),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           );
@@ -302,49 +318,61 @@ class _WarehouseDetailsScreenState extends State<WarehouseDetailsScreen>
   }
 
   Widget _buildProductImage(String imageUrl) {
-    bool isValidUrl = imageUrl.startsWith('http') || imageUrl.startsWith('https');
-
-    if (isValidUrl) {
-      return Image.network(
-        imageUrl,
-        width: 100,
-        height: 100,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          return Container(
-            width: 100,
-            height: 100,
-            color: Colors.grey[300],
-            child: const Center(
-              child: Icon(Icons.image_not_supported, color: Colors.grey),
-            ),
-          );
-        },
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) return child;
-          return Center(
-            child: CircularProgressIndicator(
-              value: loadingProgress.expectedTotalBytes != null
-                  ? loadingProgress.cumulativeBytesLoaded /
-                  loadingProgress.expectedTotalBytes!
-                  : null,
-            ),
-          );
-        },
-      );
-    }
-    else if (imageUrl.contains('asset')) {
-      return Image.asset(
-        imageUrl,
-        width: 100,
-        height: 100,
-        fit: BoxFit.cover,
-      );
-    }
-    else {
+    if (imageUrl.startsWith('assets/')) {
       return Container(
-        width: 100,
-        height: 100,
+        width: 150,
+        height: 200,
+        child: FittedBox(
+          fit: BoxFit.contain,
+          child: Image.asset(
+            imageUrl,
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
+                color: Colors.grey[300],
+                child: const Center(
+                  child: Text('Image Error', style: TextStyle(color: Colors.grey)),
+                ),
+              );
+            },
+          ),
+        ),
+      );
+    } else if (imageUrl.startsWith('http') || imageUrl.startsWith('https')) {
+      return Container(
+        width: 150,
+        height: 200,
+        child: FittedBox(
+          fit: BoxFit.contain,
+          child: Image.network(
+            imageUrl,
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
+                color: Colors.grey[300],
+                child: const Center(
+                  child: Icon(Icons.image_not_supported, color: Colors.grey),
+                ),
+              );
+            },
+            loadingBuilder: (context, child, loadingProgress) {
+              if (loadingProgress == null) return child;
+              return Center(
+                child: CircularProgressIndicator(
+                  value: loadingProgress.expectedTotalBytes != null
+                      ? loadingProgress.cumulativeBytesLoaded /
+                      loadingProgress.expectedTotalBytes!
+                      : null,
+                ),
+              );
+            },
+          ),
+        ),
+      );
+    } else {
+      return Container(
+        width: 150,
+        height: 200,
         color: Colors.grey[300],
         child: const Center(
           child: Text('No Image', style: TextStyle(color: Colors.grey)),
