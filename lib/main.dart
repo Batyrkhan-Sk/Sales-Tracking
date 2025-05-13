@@ -68,7 +68,7 @@ class MyApp extends StatelessWidget {
             },
             '/reports': (context) => const ReportsScreen(),
             '/logs': (context) => const LogsScreen(),
-            '/qr-code': (context) => const ProductScanScreen(),
+            '/qr-code': (context) => const QRCodeScreen(),
             '/profile': (context) => const ProfilePage(),
             '/add-item': (context) => const AddItemPage(),
           };
