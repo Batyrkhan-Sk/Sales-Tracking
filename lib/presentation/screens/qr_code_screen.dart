@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 import '../widgets/bottom_navigation_helper.dart';
 
-class ProductScanScreen extends StatelessWidget {
+class ProductScanScreen extends StatefulWidget {
   const ProductScanScreen({super.key});
+
+  @override
+  State<ProductScanScreen> createState() => _ProductScanScreenState();
+}
+
+class _ProductScanScreenState extends State<ProductScanScreen> {
+  String? scannedCode;
 
   @override
   Widget build(BuildContext context) {
@@ -14,7 +21,9 @@ class ProductScanScreen extends StatelessWidget {
     final bool isDarkMode = theme.brightness == Brightness.dark;
 
     final Color primaryColor = const Color(0xFF3D4A28);
-    final Color appBarColor = isDarkMode ? theme.appBarTheme.backgroundColor ?? theme.primaryColor : const Color(0xFFF8F8F2);
+    final Color appBarColor = isDarkMode
+        ? theme.appBarTheme.backgroundColor ?? theme.primaryColor
+        : const Color(0xFFF8F8F2);
     final Color titleColor = isDarkMode ? Colors.white : primaryColor;
     final Color subtitleColor = isDarkMode ? Colors.white70 : Colors.black54;
     final Color iconColor = isDarkMode ? Colors.white : primaryColor;
@@ -32,46 +41,79 @@ class ProductScanScreen extends StatelessWidget {
           ),
         ),
         centerTitle: true,
-        // Убираем leading, чтобы не было стрелки "назад"
       ),
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 32.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const SizedBox(height: 20),
-                Text(
-                  'PRODUCT SCAN',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w600,
-                    color: titleColor,
+        child: Column(
+          children: [
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32.0),
+              child: Column(
+                children: [
+                  Text(
+                    'Scan product code',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w600,
+                      color: titleColor,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Get detailed information about any product in just a few seconds by simply scanning its barcode. Fast and convenient!',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: subtitleColor,
+                  const SizedBox(height: 12),
+                  Text(
+                    'Point your camera at a barcode or QR code to get product info.',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: subtitleColor,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 40),
-                Icon(
-                  Icons.qr_code_2,
-                  size: 220,
-                  color: iconColor,
-                ),
-                const SizedBox(height: 48),
-                DoneButton(isDarkMode: isDarkMode),
-                const SizedBox(height: 40),
-              ],
+                  const SizedBox(height: 20),
+                ],
+              ),
             ),
-          ),
+            Expanded(
+              flex: 5,
+              child: MobileScanner(
+                controller: MobileScannerController(),
+                onDetect: (capture) {
+                  final List<Barcode> barcodes = capture.barcodes;
+                  for (final barcode in barcodes) {
+                    final String? code = barcode.rawValue;
+                    if (code != null && code != scannedCode) {
+                      setState(() {
+                        scannedCode = code;
+                      });
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Scanned: $code')),
+                      );
+                      break; // Останавливаем после первого успешного скана
+                    }
+                  }
+                },
+              ),
+            ),
+
+            // 👉 Отображение отсканированного кода
+            if (scannedCode != null)
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  'Scanned code: $scannedCode',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: primaryColor,
+                  ),
+                ),
+              ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32.0),
+              child: DoneButton(isDarkMode: isDarkMode),
+            ),
+            const SizedBox(height: 16),
+          ],
         ),
       ),
       bottomNavigationBar: BottomNavigationHelper.buildBottomNavigation(
@@ -93,15 +135,13 @@ class DoneButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color buttonColor = isDarkMode
-        ? const Color(0xFF556B3E)
-        : const Color(0xFF3D4A28);
-
+    final Color buttonColor =
+    isDarkMode ? const Color(0xFF556B3E) : const Color(0xFF3D4A28);
     final Color textColor = Colors.white;
 
     return ElevatedButton(
       onPressed: () {
-        // Functionality for the Done button here
+        Navigator.pop(context);
       },
       style: ElevatedButton.styleFrom(
         backgroundColor: buttonColor,
@@ -115,16 +155,16 @@ class DoneButton extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(
+          const Text(
             'Done',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,
-              color: textColor,
+              color: Colors.white,
             ),
           ),
           const SizedBox(width: 8),
-          Icon(Icons.arrow_forward, color: textColor),
+          const Icon(Icons.arrow_forward, color: Colors.white),
         ],
       ),
     );
