@@ -27,7 +27,7 @@ class IntroductionScreen extends StatelessWidget {
                 width: double.infinity, // Занимаем всю ширину
                 child: Center(
                   child: const Text(
-                    'ИНТЕЛЛЕКТУАЛЬНЫЙ УЧЕТ\nЗАПАСОВ МЕБЕЛИ И ПРОДАЖ',
+                    'SMART INVENTORY\nMANAGEMENT FOR FURNITURE AND SALES',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 24,
