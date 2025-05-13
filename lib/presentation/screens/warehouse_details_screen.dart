@@ -3,7 +3,8 @@ import 'package:provider/provider.dart';
 import '../models/warehouse.dart';
 import '../../services/api_service.dart';
 import '../widgets/bottom_navigation_helper.dart';
-import 'product_details_screen.dart'; // Импортируем ProductDetailsScreen
+import 'product_details_screen.dart';
+import 'cart_screen.dart';
 
 class WarehouseDetailsScreen extends StatefulWidget {
   final Warehouse warehouse;
@@ -19,13 +20,19 @@ class _WarehouseDetailsScreenState extends State<WarehouseDetailsScreen>
   late TabController _tabController;
   final ApiService _apiService = ApiService();
   List<Map<String, dynamic>> products = [];
+  List<Map<String, dynamic>> filteredProducts = []; // Для отфильтрованных результатов поиска
   bool isLoading = true;
+  List<Map<String, dynamic>> cartItems = [];
+  bool isSearchMode = false; // Флаг для режима поиска
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
     _loadWarehouseDetails();
+    // Добавляем слушатель для фильтрации при изменении текста
+    _searchController.addListener(_filterProducts);
   }
 
   Future<void> _loadWarehouseDetails() async {
@@ -56,7 +63,20 @@ class _WarehouseDetailsScreenState extends State<WarehouseDetailsScreen>
             'imageUrl': 'assets/images/cabinet.png',
             'category': 'Decor',
           },
+          {
+            'name': 'Modern lamp',
+            'price': 84.50,
+            'imageUrl': 'assets/images/lamp.png',
+            'category': 'Decor',
+          },
+          {
+            'name': 'Comfort sofa',
+            'price': 599.99,
+            'imageUrl': 'assets/images/sofa.png',
+            'category': 'Chair',
+          },
         ];
+        filteredProducts = products; // Изначально отображаем все продукты
         isLoading = false;
       });
     } catch (e) {
@@ -69,10 +89,197 @@ class _WarehouseDetailsScreenState extends State<WarehouseDetailsScreen>
     }
   }
 
+  // Функция для фильтрации продуктов по поисковому запросу
+  void _filterProducts() {
+    setState(() {
+      final query = _searchController.text.toLowerCase();
+      if (query.isEmpty) {
+        filteredProducts = products;
+      } else {
+        filteredProducts = products.where((product) {
+          return product['name'].toLowerCase().contains(query);
+        }).toList();
+      }
+    });
+  }
+
   @override
   void dispose() {
     _tabController.dispose();
+    _searchController.dispose();
     super.dispose();
+  }
+
+  // Функция для добавления товара в корзину
+  void addToCart(Map<String, dynamic> product) {
+    setState(() {
+      final index = cartItems.indexWhere((item) => item['name'] == product['name']);
+      if (index == -1) {
+        cartItems.add({...product, 'quantity': 1});
+      } else {
+        cartItems[index]['quantity']++;
+      }
+    });
+  }
+
+  // Открытие всплывающей корзины
+  void showCartDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: Container(
+            width: 300,
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Cart',
+                  style: TextStyle(
+                    fontFamily: 'TTTravels',
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF3D4A28),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                cartItems.isEmpty
+                    ? const Center(
+                  child: Text(
+                    'Your cart is empty',
+                    style: TextStyle(
+                      fontFamily: 'TTTravels',
+                      fontSize: 16,
+                      color: Colors.black54,
+                    ),
+                  ),
+                )
+                    : Column(
+                  children: cartItems.map((item) {
+                    return ListTile(
+                      leading: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.asset(
+                          item['imageUrl'],
+                          width: 50,
+                          height: 50,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              width: 50,
+                              height: 50,
+                              color: Colors.grey[300],
+                              child: const Center(
+                                child: Text('Error', style: TextStyle(color: Colors.grey)),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      title: Text(
+                        item['name'],
+                        style: const TextStyle(
+                          fontFamily: 'TTTravels',
+                          fontSize: 14,
+                          color: Color(0xFF3D4A28),
+                        ),
+                      ),
+                      subtitle: Text(
+                        '\$${item['price'].toStringAsFixed(2)} x ${item['quantity']}',
+                        style: const TextStyle(
+                          fontFamily: 'TTTravels',
+                          fontSize: 12,
+                          color: Colors.black54,
+                        ),
+                      ),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.remove_circle_outline),
+                        onPressed: () {
+                          setState(() {
+                            if (item['quantity'] > 1) {
+                              item['quantity']--;
+                            } else {
+                              cartItems.remove(item);
+                            }
+                          });
+                          if (cartItems.isEmpty) Navigator.pop(context);
+                        },
+                      ),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 16),
+                if (cartItems.isNotEmpty)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Total:',
+                        style: TextStyle(
+                          fontFamily: 'TTTravels',
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF3D4A28),
+                        ),
+                      ),
+                      Text(
+                        '\$${cartItems.fold(0.0, (total, item) => total + (item['price'] as double) * (item['quantity'] as int)).toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          fontFamily: 'TTTravels',
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF3D4A28),
+                        ),
+                      ),
+                    ],
+                  ),
+                const SizedBox(height: 16),
+                if (cartItems.isNotEmpty)
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        Navigator.pushNamed(context, '/cart');
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF3D4A28),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      child: const Text(
+                        'Checkout',
+                        style: TextStyle(
+                          fontFamily: 'TTTravels',
+                          fontSize: 16,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text(
+                    'Close',
+                    style: TextStyle(
+                      fontFamily: 'TTTravels',
+                      fontSize: 14,
+                      color: Color(0xFF3D4A28),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -95,7 +302,26 @@ class _WarehouseDetailsScreenState extends State<WarehouseDetailsScreen>
                   Navigator.pushReplacementNamed(context, '/explore');
                 },
               ),
-              title: Text(
+              title: isSearchMode
+                  ? TextField(
+                controller: _searchController,
+                autofocus: true,
+                decoration: const InputDecoration(
+                  hintText: 'Search products...',
+                  border: InputBorder.none,
+                  hintStyle: TextStyle(
+                    fontFamily: 'TTTravels',
+                    fontSize: 16,
+                    color: Colors.black54,
+                  ),
+                ),
+                style: const TextStyle(
+                  fontFamily: 'TTTravels',
+                  fontSize: 16,
+                  color: Color(0xFF3D4A28),
+                ),
+              )
+                  : Text(
                 widget.warehouse.name,
                 style: const TextStyle(
                   fontFamily: 'TTTravels',
@@ -106,17 +332,24 @@ class _WarehouseDetailsScreenState extends State<WarehouseDetailsScreen>
               ),
               actions: [
                 IconButton(
-                  icon: const Icon(Icons.search),
+                  icon: Icon(isSearchMode ? Icons.close : Icons.search),
                   onPressed: () {
-                    // Search functionality
+                    setState(() {
+                      if (isSearchMode) {
+                        isSearchMode = false;
+                        _searchController.clear();
+                        filteredProducts = products; // Сбрасываем фильтр
+                      } else {
+                        isSearchMode = true;
+                      }
+                    });
                   },
                 ),
-                IconButton(
-                  icon: const Icon(Icons.shopping_cart),
-                  onPressed: () {
-                    // Cart functionality
-                  },
-                ),
+                if (!isSearchMode)
+                  IconButton(
+                    icon: const Icon(Icons.shopping_cart),
+                    onPressed: () => showCartDialog(),
+                  ),
               ],
               bottom: TabBar(
                 controller: _tabController,
@@ -191,15 +424,16 @@ class _WarehouseDetailsScreenState extends State<WarehouseDetailsScreen>
       return const Center(child: CircularProgressIndicator());
     }
 
-    final filteredProducts = category != null
-        ? products.where((product) => product['category'] == category).toList()
-        : products;
+    // Фильтруем продукты по категории и поисковому запросу
+    final categoryFilteredProducts = category != null
+        ? filteredProducts.where((product) => product['category'] == category).toList()
+        : filteredProducts;
 
     final List<Map<String, dynamic>> displayItems = [
-      ...filteredProducts,
-      if (filteredProducts.length < 3) {'isEmpty': true},
-      if (filteredProducts.length < 2) {'isEmpty': true},
-      if (filteredProducts.isEmpty) {'isEmpty': true},
+      ...categoryFilteredProducts,
+      if (categoryFilteredProducts.length < 3) {'isEmpty': true},
+      if (categoryFilteredProducts.length < 2) {'isEmpty': true},
+      if (categoryFilteredProducts.isEmpty) {'isEmpty': true},
     ];
 
     return ListView.builder(
@@ -306,6 +540,16 @@ class _WarehouseDetailsScreenState extends State<WarehouseDetailsScreen>
                         height: 200,
                         child: _buildProductImage(item['imageUrl']),
                       ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.add_shopping_cart),
+                      color: const Color(0xFF3D4A28),
+                      onPressed: () {
+                        addToCart(item);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Added to cart!')),
+                        );
+                      },
                     ),
                   ],
                 ),

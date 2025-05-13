@@ -36,7 +36,7 @@ class AccountScreen extends StatelessWidget {
             return Scaffold(
               body: SafeArea(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 20.0), // Убрал вертикальный отступ
                   child: isLandscape
                       ? _buildLandscapeLayout(context, user, isSmallScreen, isMediumScreen, isLargeScreen)
                       : _buildPortraitLayout(context, user, isSmallScreen, isMediumScreen, isLargeScreen),
@@ -77,73 +77,84 @@ class AccountScreen extends StatelessWidget {
 
   Widget _buildPortraitLayout(BuildContext context, User user, bool isSmallScreen, bool isMediumScreen,
       bool isLargeScreen) {
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          Row(
-            children: [
-              const CircleAvatar(
-                radius: 35,
-                backgroundImage: AssetImage('assets/profile.jpg'),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      user.fullName,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                        color: Theme.of(context).colorScheme.onSurface,
+    return Column(
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 20.0), // Сдвиг вниз
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const CircleAvatar(
+                        radius: 35,
+                        backgroundImage: AssetImage('assets/profile.jpg'),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      user.role,
-                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
-                    ),
-                    Text(
-                      user.email,
-                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
-                    ),
-                  ],
-                ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              user.fullName,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              user.role,
+                              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
+                            ),
+                            Text(
+                              user.email,
+                              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  ListView(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    children: [
+                      const Divider(),
+                      MenuItem(icon: Icons.person, text: 'Profile', onTap: () => Navigator.pushNamed(context, '/profile')),
+                      const Divider(),
+                      MenuItem(
+                          icon: Icons.hub_outlined,
+                          text: 'Role Management',
+                          onTap: () => Navigator.pushNamed(context, '/manage-roles')),
+                      const Divider(),
+                      MenuItem(
+                          icon: Icons.add_box_outlined,
+                          text: 'Add Items',
+                          onTap: () => Navigator.pushNamed(context, '/add-item')),
+                      const Divider(),
+                      MenuItem(
+                          icon: Icons.insert_chart_outlined,
+                          text: 'Reports',
+                          onTap: () => Navigator.pushNamed(context, '/reports')),
+                      const Divider(),
+                      MenuItem(
+                          icon: Icons.logout,
+                          text: 'Logout',
+                          onTap: () => Navigator.pushNamed(context, '/signin')),
+                      const Divider(),
+                    ],
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-          const SizedBox(height: 20),
-          ListView(
-            shrinkWrap: true,
-            children: [
-              const Divider(),
-              MenuItem(icon: Icons.person, text: 'Profile', onTap: () => Navigator.pushNamed(context, '/profile')),
-              const Divider(),
-              MenuItem(
-                  icon: Icons.hub_outlined,
-                  text: 'Role Management',
-                  onTap: () => Navigator.pushNamed(context, '/manage-roles')),
-              const Divider(),
-              MenuItem(
-                  icon: Icons.add_box_outlined,
-                  text: 'Add Items',
-                  onTap: () => Navigator.pushNamed(context, '/add-item')),
-              const Divider(),
-              MenuItem(
-                  icon: Icons.insert_chart_outlined,
-                  text: 'Reports',
-                  onTap: () => Navigator.pushNamed(context, '/reports')),
-              const Divider(),
-              MenuItem(
-                  icon: Icons.logout,
-                  text: 'Logout',
-                  onTap: () => Navigator.pushNamed(context, '/signin')),
-              const Divider(),
-            ],
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -234,12 +245,15 @@ class MenuItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: Icon(icon, color: Theme.of(context).colorScheme.onSurface),
+      contentPadding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 16.0), // Уменьшен вертикальный отступ
+      visualDensity: VisualDensity.compact, // Компактный вид
+      leading: Icon(icon, size: 20, color: Theme.of(context).colorScheme.onSurface), // Уменьшен размер иконки
       title: Text(
         text,
-        style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onSurface),
+        style: const TextStyle(fontSize: 14), // Уменьшен размер текста
+        overflow: TextOverflow.ellipsis,
       ),
-      trailing: Icon(Icons.chevron_right, color: Theme.of(context).colorScheme.onSurface),
+      trailing: Icon(Icons.chevron_right, size: 20, color: Theme.of(context).colorScheme.onSurface), // Уменьшен размер стрелки
       onTap: onTap,
     );
   }
