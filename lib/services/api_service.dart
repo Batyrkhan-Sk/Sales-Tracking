@@ -8,7 +8,12 @@ import '../presentation/models/user.dart';
 import 'connectivity_service.dart';
 
 class ApiService {
+<<<<<<< HEAD
   final String baseUrl = 'my_api';
+=======
+final String baseUrl = '172.20.10.3';
+
+>>>>>>> 98d63eb23d8b8dbe7cbad97faa3a82d0c66d0c34
   final bool devMode = true;
 
   static const String _warehouseCacheBox = 'warehouseCache';
@@ -351,4 +356,42 @@ class ApiService {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('token') != null;
   }
+
+Future<Map<String, dynamic>> scanFurniture(String code) async {
+  if (devMode) {
+    // Вернём мок-данные, если включён режим разработки
+    await Future.delayed(Duration(milliseconds: 500));
+    return {
+      'id': 'mock-id',
+      'name': 'Mock Furniture',
+      'description': 'This is a mock furniture item from QR code.',
+      'price': 199.99,
+      'dimensions': {'length': 100, 'width': 50, 'height': 60},
+    };
+  }
+
+  try {
+    final response = await http.post(
+      Uri.parse('http://$baseUrl:5000/api/furniture/scan'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'code': code}),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data['success'] == true && data['furniture'] != null) {
+        return data['furniture'];
+      } else {
+        throw Exception('Furniture not found or response invalid');
+      }
+    } else {
+      throw Exception('Request failed: ${response.statusCode}');
+    }
+  } catch (e) {
+    print('Ошибка при сканировании: $e');
+    throw Exception('Ошибка при сканировании: $e');
+  }
+}
+
+
 }
