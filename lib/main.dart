@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:hive_flutter/hive_flutter.dart'; // Add Hive
 import 'presentation/screens/explore_screen.dart';
 import 'presentation/screens/sign_in_screen.dart';
 import 'presentation/screens/sign_up_screen.dart';
@@ -15,13 +16,21 @@ import 'presentation/screens/profile_page.dart';
 import 'presentation/models/warehouse.dart';
 import 'presentation/screens/add_item_screen.dart';
 import 'presentation/screens/reports_screen.dart';
-import 'presentation/screens/introduction_screen.dart'; // Обновляем импорт
+import 'presentation/screens/introduction_screen.dart';
 import 'providers/app_providers.dart';
 import 'providers/guest_mode_banner.dart';
-import '../services/api_service.dart';
+import 'services/api_service.dart';
+import 'services/connectivity_service.dart'; // Add ConnectivityService
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Hive for local storage
+  await Hive.initFlutter();
+  // Register adapters for your models (e.g., Warehouse, UserReport)
+  // Hive.registerAdapter(WarehouseAdapter());
+  // Hive.registerAdapter(UserReportAdapter());
+
   final apiService = ApiService();
   final isLoggedIn = await apiService.isLoggedIn();
 
@@ -51,11 +60,12 @@ class MyApp extends StatelessWidget {
           guestModeProvider.setGuestMode(!initialLoggedIn);
           return guestModeProvider;
         }),
+        ChangeNotifierProvider(create: (_) => ConnectivityService()), // Add ConnectivityService
       ],
       child: Consumer2<ThemeProvider, LanguageProvider>(
         builder: (context, themeProvider, languageProvider, child) {
           final routes = {
-            '/': (context) => const IntroductionScreen(), // Обновляем на IntroductionScreen
+            '/': (context) => const IntroductionScreen(),
             '/account': (context) => const AccountScreen(),
             '/explore': (context) => const ExploreScreen(),
             '/signin': (context) => const SignInScreen(),
@@ -97,10 +107,12 @@ class MyApp extends StatelessWidget {
               GlobalWidgetsLocalizations.delegate,
               GlobalCupertinoLocalizations.delegate,
             ],
-            initialRoute: '/', // Начальный маршрут
+            initialRoute: '/',
             onGenerateRoute: (routeSettings) {
               final guestModeProvider =
               Provider.of<GuestModeProvider>(context, listen: false);
+              final connectivityService =
+              Provider.of<ConnectivityService>(context, listen: false);
 
               if (guestModeProvider.isGuestMode &&
                   (routeSettings.name == '/profile' ||
@@ -129,9 +141,36 @@ class MyApp extends StatelessWidget {
                 );
               }
 
+              // Wrap all routes with a Connectivity-aware widget if needed
               return MaterialPageRoute(
-                builder: routes[routeSettings.name] ??
-                        (context) => const ExploreScreen(),
+                builder: (context) => Builder(
+                  builder: (context) {
+                    if (!connectivityService.isOnline) {
+                      return Scaffold(
+                        body: Stack(
+                          children: [
+                            routes[routeSettings.name]!(context),
+                            Positioned(
+                              top: 0,
+                              left: 0,
+                              right: 0,
+                              child: Container(
+                                color: Colors.red,
+                                padding: EdgeInsets.all(8.0),
+                                child: Text(
+                                  'No Internet Connection',
+                                  style: TextStyle(color: Colors.white),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+                    return routes[routeSettings.name]!(context);
+                  },
+                ),
               );
             },
           );

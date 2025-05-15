@@ -49,7 +49,7 @@ class AccountScreen extends StatelessWidget {
                 child: BottomNavigationBar(
                   type: BottomNavigationBarType.fixed,
                   selectedItemColor: Theme.of(context).colorScheme.primary,
-                  unselectedItemColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                  unselectedItemColor: Theme.of(context).colorScheme.onSurface.withAlpha(153),
                   currentIndex: 3,
                   onTap: (index) {
                     if (index == 0) {
@@ -82,7 +82,7 @@ class AccountScreen extends StatelessWidget {
         Expanded(
           child: SingleChildScrollView(
             child: Padding(
-              padding: const EdgeInsets.only(top: 20.0), // Сдвиг вниз
+              padding: const EdgeInsets.only(top: 20.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -108,11 +108,11 @@ class AccountScreen extends StatelessWidget {
                             const SizedBox(height: 4),
                             Text(
                               user.role,
-                              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
+                              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withAlpha(153)),
                             ),
                             Text(
                               user.email,
-                              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
+                              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withAlpha(153)),
                             ),
                           ],
                         ),
@@ -185,11 +185,11 @@ class AccountScreen extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   user.role,
-                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withAlpha(153)),
                 ),
                 Text(
                   user.email,
-                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withAlpha(153)),
                 ),
               ],
             ),

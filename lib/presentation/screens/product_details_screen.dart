@@ -19,7 +19,7 @@ class ProductDetailsScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.shopping_cart),
             onPressed: () {
-              // Логика корзины
+              // Cart logic
             },
           ),
         ],
@@ -31,7 +31,7 @@ class ProductDetailsScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Изображение товара
+              // Product image
               Center(
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(12),
@@ -54,7 +54,7 @@ class ProductDetailsScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              // Название товара
+              // Product name
               Text(
                 product['name'],
                 style: const TextStyle(
@@ -65,9 +65,9 @@ class ProductDetailsScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              // Описание
+              // Description
               Text(
-                product['description'] ?? 'Нет описания',
+                product['description'] ?? 'No description',
                 style: TextStyle(
                   fontFamily: 'TTTravels',
                   fontSize: 16,
@@ -75,14 +75,14 @@ class ProductDetailsScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              // Размеры
+              // Dimensions
               Row(
                 children: [
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Высота: ${product['height'] ?? 'N/A'}',
+                        'Height: ${product['height'] ?? 'N/A'}',
                         style: TextStyle(
                           fontFamily: 'TTTravels',
                           fontSize: 16,
@@ -90,7 +90,7 @@ class ProductDetailsScreen extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        'Ширина: ${product['width'] ?? 'N/A'}',
+                        'Width: ${product['width'] ?? 'N/A'}',
                         style: TextStyle(
                           fontFamily: 'TTTravels',
                           fontSize: 16,
@@ -98,7 +98,7 @@ class ProductDetailsScreen extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        'Глубина: ${product['depth'] ?? 'N/A'}',
+                        'Depth: ${product['depth'] ?? 'N/A'}',
                         style: TextStyle(
                           fontFamily: 'TTTravels',
                           fontSize: 16,
@@ -109,7 +109,7 @@ class ProductDetailsScreen extends StatelessWidget {
                   ),
                   const Spacer(),
                   Text(
-                    'Цена: \$${product['price'].toStringAsFixed(2)}',
+                    'Price: \$${product['price'].toStringAsFixed(2)}',
                     style: const TextStyle(
                       fontFamily: 'TTTravels',
                       fontSize: 20,
@@ -120,12 +120,12 @@ class ProductDetailsScreen extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 24),
-              // Кнопка
+              // Button
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    // Логика продажи
+                    // Sell logic
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF3D4A28),
@@ -135,7 +135,7 @@ class ProductDetailsScreen extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
                   child: const Text(
-                    'Продать сейчас',
+                    'Sell Now',
                     style: TextStyle(
                       fontFamily: 'TTTravels',
                       fontSize: 16,

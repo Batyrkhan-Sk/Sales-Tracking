@@ -10,7 +10,7 @@ class User {
     required this.fullName,
     required this.email,
     this.password,
-    this.role = '', // Default to empty string if not provided
+    this.role = '',
   });
 
   Map<String, dynamic> toJson() {
@@ -28,7 +28,7 @@ class User {
       id: json['id'],
       fullName: json['fullName'] ?? '',
       email: json['email'] ?? '',
-      role: json['role'] ?? '', // Add role from JSON
+      role: json['role'] ?? '',
     );
   }
 }

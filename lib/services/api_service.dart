@@ -1,15 +1,98 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:hive/hive.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/foundation.dart' show kDebugMode, debugPrint;
 import '../presentation/models/warehouse.dart';
 import '../presentation/models/user.dart';
+import 'connectivity_service.dart';
 
 class ApiService {
-final String baseUrl = 'my_api';
-
+  final String baseUrl = 'my_api';
   final bool devMode = true;
 
-  Future<List<Warehouse>> fetchWarehouses() async {
+  static const String _warehouseCacheBox = 'warehouseCache';
+  static const String _userCacheBox = 'userCache';
+  static const String _queueBoxName = 'apiQueue';
+
+  late Box _warehouseBox;
+  late Box _userBox;
+  late Box _queueBox;
+  final ConnectivityService connectivityService;
+
+  static ApiService? _instance;
+
+  factory ApiService({ConnectivityService? connectivityService}) {
+    if (_instance == null) {
+      // If no connectivity service is provided, create a new instance
+      final connService = connectivityService ?? ConnectivityService();
+      _instance = ApiService._internal(connectivityService: connService);
+    }
+    return _instance!;
+  }
+
+  // Private constructor for singleton
+  ApiService._internal({required this.connectivityService}) {
+    _initializeHive();
+  }
+
+  Future<void> _initializeHive() async {
+    _warehouseBox = await Hive.openBox(_warehouseCacheBox);
+
+    _userBox = await Hive.openBox(_userCacheBox);
+    _queueBox = await Hive.openBox(_queueBoxName);
+  }
+
+  // Queue an API request for later execution
+  Future<void> _queueRequest(String method, Map<String, dynamic> data) async {
+    await _queueBox.add({
+      'method': method,
+      'data': jsonEncode(data),
+      'timestamp': DateTime.now().toIso8601String(),
+    });
+  }
+
+  // Process queued requests when online
+  Future<void> _processQueue() async {
+    if (_queueBox.isNotEmpty && connectivityService.isOnline) {
+      for (var queued in _queueBox.values.toList()) {
+        await _executeQueuedRequest(Map<String, dynamic>.from(queued));
+      }
+      await _queueBox.clear();
+    }
+  }
+
+  Future<void> _executeQueuedRequest(Map<String, dynamic> queued) async {
+    final method = queued['method'] as String;
+    final data = jsonDecode(queued['data'] as String) as Map<String, dynamic>;
+    switch (method) {
+      case 'registerUser':
+        final user = User.fromJson(data);
+        await registerUser(user);
+        break;
+      case 'loginUser':
+        final email = data['email'] as String;
+        final password = data['password'] as String;
+        await loginUser(email, password);
+        break;
+    // Add more methods as needed
+    }
+  }
+
+  // Manual sync method for "Sync" or "Reload" button
+  Future<void> syncData() async {
+    if (!connectivityService.isOnline) {
+      throw Exception('No internet connection to sync');
+    }
+    await _processQueue();
+    await fetchWarehouses(forceRefresh: true);
+    await getCurrentUser(forceRefresh: true);
+    if (kDebugMode) {
+      debugPrint('Data synced with MongoDB');
+    }
+  }
+
+  Future<List<Warehouse>> fetchWarehouses({bool forceRefresh = false}) async {
     if (devMode) {
       return [
         Warehouse(
@@ -31,18 +114,35 @@ final String baseUrl = 'my_api';
       ];
     }
 
+    // Return cached data if offline and not forcing refresh
+    if (!connectivityService.isOnline && !forceRefresh && _warehouseBox.isNotEmpty) {
+      return _warehouseBox.values
+          .map((json) => Warehouse.fromJson(Map<String, dynamic>.from(json)))
+          .toList();
+    }
+
     try {
+      if (!connectivityService.isOnline) {
+        await _queueRequest('fetchWarehouses', {});
+        throw Exception('Offline: Data queued for sync');
+      }
+
+
       final response = await http.get(Uri.parse('$baseUrl/furniture'));
-      print('Response: $response');
-      print('Response body: ${response.body}');
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
-        return data.map((json) => Warehouse.fromJson(json)).toList();
+        final warehouses = data.map((json) => Warehouse.fromJson(json as Map<String, dynamic>)).toList();
+        // Cache the data
+        await _warehouseBox.clear();
+        for (var warehouse in warehouses) {
+          await _warehouseBox.add(warehouse.toJson());
+        }
+        return warehouses;
       } else {
         throw Exception('Failed to load warehouses: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error fetching warehouses: $e');
+      if (!connectivityService.isOnline) throw Exception('Offline: Using cached data');
       throw Exception('Error fetching warehouses: $e');
     }
   }
@@ -66,11 +166,14 @@ final String baseUrl = 'my_api';
     }
 
     try {
-      final response = await http.get(Uri.parse('$baseUrl/furniture/$id'));
+      if (!connectivityService.isOnline) {
+        throw Exception('Offline: Cannot fetch warehouse details');
+      }
 
+      final response = await http.get(Uri.parse('$baseUrl/furniture/$id'));
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body);
-        return Warehouse.fromJson(json);
+        return Warehouse.fromJson(json as Map<String, dynamic>);
       } else {
         throw Exception('Failed to load warehouse details: ${response.statusCode}');
       }
@@ -90,6 +193,11 @@ final String baseUrl = 'my_api';
     }
 
     try {
+      if (!connectivityService.isOnline) {
+        await _queueRequest('registerUser', user.toJson());
+        throw Exception('Offline: Registration queued for sync');
+      }
+
       final response = await http.post(
         Uri.parse('$baseUrl/users/register'),
         headers: {'Content-Type': 'application/json'},
@@ -101,19 +209,17 @@ final String baseUrl = 'my_api';
       );
 
       if (response.statusCode == 201) {
-        final responseData = jsonDecode(response.body);
-        return User(
+        final responseData = jsonDecode(response.body) as Map<String, dynamic>;
+        final newUser = User(
           id: responseData['id'] ?? 'unknown',
           fullName: responseData['fullName'] ?? user.fullName,
           email: responseData['email'] ?? user.email,
         );
+        await _userBox.put('currentUser', newUser.toJson());
+        return newUser;
       } else {
-        final errorData = jsonDecode(response.body);
-        if (errorData.containsKey('message')) {
-          throw errorData['message'];
-        } else {
-          throw 'Registration error: ${response.statusCode}';
-        }
+        final errorData = jsonDecode(response.body) as Map<String, dynamic>;
+        throw errorData['message'] ?? 'Registration error: ${response.statusCode}';
       }
     } catch (e) {
       if (e.toString().contains('already registered')) {
@@ -137,6 +243,11 @@ final String baseUrl = 'my_api';
     }
 
     try {
+      if (!connectivityService.isOnline) {
+        await _queueRequest('loginUser', {'email': email, 'password': password});
+        throw Exception('Offline: Login queued for sync');
+      }
+
       final response = await http.post(
         Uri.parse('$baseUrl/users/login'),
         headers: {'Content-Type': 'application/json'},
@@ -147,23 +258,24 @@ final String baseUrl = 'my_api';
       );
 
       if (response.statusCode == 200) {
-        return json.decode(response.body);
+        final data = json.decode(response.body) as Map<String, dynamic>;
+        final user = User.fromJson(data['user'] as Map<String, dynamic>);
+        await _userBox.put('currentUser', user.toJson());
+        return data;
       } else {
         String errorMessage = 'Login failed';
         try {
-          final errorResponse = json.decode(response.body);
+          final errorResponse = json.decode(response.body) as Map<String, dynamic>;
           errorMessage = errorResponse['message'] ?? errorMessage;
         } catch (_) {}
-
         throw Exception(errorMessage);
       }
     } catch (e) {
-      print('Error during login: $e');
       throw Exception('Login failed: $e');
     }
   }
 
-  Future<User> getCurrentUser() async {
+  Future<User> getCurrentUser({bool forceRefresh = false}) async {
     if (devMode) {
       await Future.delayed(Duration(milliseconds: 500));
       return User(
@@ -174,20 +286,32 @@ final String baseUrl = 'my_api';
       );
     }
 
+    // Return cached user if offline and not forcing refresh
+    if (!connectivityService.isOnline && !forceRefresh && _userBox.containsKey('currentUser')) {
+      return User.fromJson(Map<String, dynamic>.from(_userBox.get('currentUser')));
+    }
+
     try {
-      final String token = 'mock-jwt-token-for-development';
+      if (!connectivityService.isOnline) {
+        throw Exception('Offline: Using cached user data');
+      }
+
+      final String token = 'mock-jwt-token-for-development'; // Replace with actual token retrieval
       final response = await http.get(
         Uri.parse('$baseUrl/users/me'),
         headers: {'Authorization': 'Bearer $token'},
       );
 
       if (response.statusCode == 200) {
-        final json = jsonDecode(response.body);
-        return User.fromJson(json);
+        final json = jsonDecode(response.body) as Map<String, dynamic>;
+        final user = User.fromJson(json);
+        await _userBox.put('currentUser', user.toJson());
+        return user;
       } else {
         throw Exception('Failed to load current user: ${response.statusCode}');
       }
     } catch (e) {
+      if (!connectivityService.isOnline) throw Exception('Offline: Using cached user data');
       throw Exception('Error fetching current user: $e');
     }
   }
@@ -199,6 +323,10 @@ final String baseUrl = 'my_api';
     }
 
     try {
+      if (!connectivityService.isOnline) {
+        throw Exception('Offline: Logout will be completed when online');
+      }
+
       final String token = 'mock-jwt-token-for-development';
       final response = await http.post(
         Uri.parse('$baseUrl/users/logout'),
@@ -213,6 +341,7 @@ final String baseUrl = 'my_api';
       }
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('token');
+      await _userBox.delete('currentUser');
     } catch (e) {
       throw Exception('Error during logout: $e');
     }
