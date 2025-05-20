@@ -11,7 +11,7 @@ import '../presentation/models/auth_data.dart';
 import 'connectivity_service.dart';
 
 class ApiService {
-  final String baseUrl = 'my_api';
+  final String baseUrl = '13.53.40.246';
   final bool devMode = true;
 
   static const String _warehouseCacheBox = 'warehouseCache';
