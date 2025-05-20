@@ -25,23 +25,37 @@ class _WarehouseDetailsScreenState extends State<WarehouseDetailsScreen>
   List<Map<String, dynamic>> cartItems = [];
   bool isSearchMode = false; // Флаг для режима поиска
   final TextEditingController _searchController = TextEditingController();
+  bool _isLoggedIn = false; // Флаг авторизации
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
-    _loadWarehouseDetails();
-    // Добавляем слушатель для фильтрации при изменении текста
+    _checkAuthStatus();
     _searchController.addListener(_filterProducts);
   }
 
+  // Проверка статуса авторизации
+  Future<void> _checkAuthStatus() async {
+    final isLoggedIn = await _apiService.isLoggedIn();
+    setState(() {
+      _isLoggedIn = isLoggedIn;
+    });
+    if (_isLoggedIn) {
+      await _loadWarehouseDetails();
+    }
+  }
+
   Future<void> _loadWarehouseDetails() async {
+    if (!_isLoggedIn) return;
+
     setState(() {
       isLoading = true;
     });
 
     try {
-      final warehouseDetails = await _apiService.fetchWarehouseDetails(widget.warehouse.id);
+      // Здесь можно использовать fetchWarehouseDetails для реальных данных
+      // final warehouseDetails = await _apiService.fetchWarehouseDetails(widget.warehouse.id);
 
       setState(() {
         products = [
@@ -91,6 +105,8 @@ class _WarehouseDetailsScreenState extends State<WarehouseDetailsScreen>
 
   // Функция для фильтрации продуктов по поисковому запросу
   void _filterProducts() {
+    if (!_isLoggedIn) return;
+
     setState(() {
       final query = _searchController.text.toLowerCase();
       if (query.isEmpty) {
@@ -110,8 +126,15 @@ class _WarehouseDetailsScreenState extends State<WarehouseDetailsScreen>
     super.dispose();
   }
 
-  // Функция для добавления товара в корзину
+  // Функция для добавления товара в корзину (доступна только для авторизованных)
   void addToCart(Map<String, dynamic> product) {
+    if (!_isLoggedIn) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please log in to add items to cart!')),
+      );
+      return;
+    }
+
     setState(() {
       final index = cartItems.indexWhere((item) => item['name'] == product['name']);
       if (index == -1) {
@@ -122,8 +145,15 @@ class _WarehouseDetailsScreenState extends State<WarehouseDetailsScreen>
     });
   }
 
-  // Открытие всплывающей корзины
+  // Открытие всплывающей корзины (доступна только для авторизованных)
   void showCartDialog() {
+    if (!_isLoggedIn) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Access denied, please sign in')),
+      );
+      return;
+    }
+
     showDialog(
       context: context,
       builder: (context) {
@@ -334,11 +364,17 @@ class _WarehouseDetailsScreenState extends State<WarehouseDetailsScreen>
                 IconButton(
                   icon: Icon(isSearchMode ? Icons.close : Icons.search),
                   onPressed: () {
+                    if (!_isLoggedIn) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Please log in to search products!')),
+                      );
+                      return;
+                    }
                     setState(() {
                       if (isSearchMode) {
                         isSearchMode = false;
                         _searchController.clear();
-                        filteredProducts = products; // Сбрасываем фильтр
+                        filteredProducts = products;
                       } else {
                         isSearchMode = true;
                       }
@@ -348,7 +384,15 @@ class _WarehouseDetailsScreenState extends State<WarehouseDetailsScreen>
                 if (!isSearchMode)
                   IconButton(
                     icon: const Icon(Icons.shopping_cart),
-                    onPressed: () => showCartDialog(),
+                    onPressed: () {
+                      if (!_isLoggedIn) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Access denied, please sign in')),
+                        );
+                        return;
+                      }
+                      showCartDialog();
+                    },
                   ),
               ],
               bottom: TabBar(
@@ -401,7 +445,8 @@ class _WarehouseDetailsScreenState extends State<WarehouseDetailsScreen>
             ),
           ];
         },
-        body: TabBarView(
+        body: _isLoggedIn
+            ? TabBarView(
           controller: _tabController,
           children: [
             buildProductList(),
@@ -409,6 +454,47 @@ class _WarehouseDetailsScreenState extends State<WarehouseDetailsScreen>
             buildProductList(category: 'Table'),
             buildProductList(category: 'Decor'),
           ],
+        )
+            : Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text(
+                'Please log in to view products and use the cart.',
+                style: TextStyle(
+                  fontFamily: 'TTTravels',
+                  fontSize: 18,
+                  color: Color(0xFF3D4A28),
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () {
+                  // Здесь можно добавить навигацию на экран логина
+                  // Например: Navigator.pushNamed(context, '/login');
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Login feature not implemented yet. Please use an authenticated session.')),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF3D4A28),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+                ),
+                child: const Text(
+                  'Log In',
+                  style: TextStyle(
+                    fontFamily: 'TTTravels',
+                    fontSize: 16,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
       bottomNavigationBar: BottomNavigationHelper.buildBottomNavigation(
@@ -492,6 +578,12 @@ class _WarehouseDetailsScreenState extends State<WarehouseDetailsScreen>
         } else {
           return GestureDetector(
             onTap: () {
+              if (!_isLoggedIn) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Please log in to view product details!')),
+                );
+                return;
+              }
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -546,9 +638,6 @@ class _WarehouseDetailsScreenState extends State<WarehouseDetailsScreen>
                       color: const Color(0xFF3D4A28),
                       onPressed: () {
                         addToCart(item);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Added to cart!')),
-                        );
                       },
                     ),
                   ],

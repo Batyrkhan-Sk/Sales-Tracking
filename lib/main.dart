@@ -3,7 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:hive_flutter/hive_flutter.dart'; // Add Hive
+import 'package:hive_flutter/hive_flutter.dart';
+
+import 'presentation/models/auth_data.dart';
+import 'presentation/models/warehouse.dart';
+
 import 'presentation/screens/explore_screen.dart';
 import 'presentation/screens/sign_in_screen.dart';
 import 'presentation/screens/sign_up_screen.dart';
@@ -13,23 +17,24 @@ import 'presentation/screens/warehouse_details_screen.dart';
 import 'presentation/screens/qr_code_screen.dart';
 import 'presentation/screens/logs_screen.dart';
 import 'presentation/screens/profile_page.dart';
-import 'presentation/models/warehouse.dart';
 import 'presentation/screens/add_item_screen.dart';
 import 'presentation/screens/reports_screen.dart';
 import 'presentation/screens/introduction_screen.dart';
+import 'presentation/screens/set_pin_screen.dart';
+
+import 'presentation/widgets/offline_banner_wrapper.dart';
+
 import 'providers/app_providers.dart';
 import 'providers/guest_mode_banner.dart';
 import 'services/api_service.dart';
-import 'services/connectivity_service.dart'; // Add ConnectivityService
+import 'services/connectivity_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Hive for local storage
   await Hive.initFlutter();
-  // Register adapters for your models (e.g., Warehouse, UserReport)
-  // Hive.registerAdapter(WarehouseAdapter());
-  // Hive.registerAdapter(UserReportAdapter());
+  Hive.registerAdapter(AuthDataAdapter());
+  await Hive.openBox<AuthData>('auth');
 
   final apiService = ApiService();
   final isLoggedIn = await apiService.isLoggedIn();
@@ -60,10 +65,10 @@ class MyApp extends StatelessWidget {
           guestModeProvider.setGuestMode(!initialLoggedIn);
           return guestModeProvider;
         }),
-        ChangeNotifierProvider(create: (_) => ConnectivityService()), // Add ConnectivityService
+        ChangeNotifierProvider(create: (_) => ConnectivityService()),
       ],
       child: Consumer2<ThemeProvider, LanguageProvider>(
-        builder: (context, themeProvider, languageProvider, child) {
+        builder: (context, themeProvider, languageProvider, _) {
           final routes = {
             '/': (context) => const IntroductionScreen(),
             '/account': (context) => const AccountScreen(),
@@ -78,9 +83,10 @@ class MyApp extends StatelessWidget {
             },
             '/reports': (context) => const ReportsScreen(),
             '/logs': (context) => const LogsScreen(),
-            '/qr-code': (context) => const QRCodeScreen(),
+            '/qr-code': (context) => const ProductScanScreen(),
             '/profile': (context) => const ProfilePage(),
             '/add-item': (context) => const AddItemPage(),
+            '/set-pin': (context) => const SetPinScreen(),
           };
 
           return MaterialApp(
@@ -107,71 +113,52 @@ class MyApp extends StatelessWidget {
               GlobalWidgetsLocalizations.delegate,
               GlobalCupertinoLocalizations.delegate,
             ],
-            initialRoute: '/',
-            onGenerateRoute: (routeSettings) {
+            initialRoute: '/', // или '/explore' если хочешь вход сразу после isLoggedIn
+            onGenerateRoute: (settings) {
               final guestModeProvider =
               Provider.of<GuestModeProvider>(context, listen: false);
-              final connectivityService =
-              Provider.of<ConnectivityService>(context, listen: false);
 
+              // Защита от неавторизованного входа
               if (guestModeProvider.isGuestMode &&
-                  (routeSettings.name == '/profile' ||
-                      routeSettings.name == '/account')) {
+                  (settings.name == '/profile' || settings.name == '/account')) {
                 return MaterialPageRoute(
-                  builder: (context) => Scaffold(
-                    body: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text('Access denied. Please log in.'),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => const SignInScreen()),
-                              );
-                            },
-                            child: const Text('Sign In'),
-                          ),
-                        ],
+                  builder: (context) => OfflineBannerWrapper(
+                    child: Scaffold(
+                      body: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text('Access denied. Please log in.'),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pushReplacementNamed(context, '/signin');
+                              },
+                              child: const Text('Sign In'),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 );
               }
 
-              // Wrap all routes with a Connectivity-aware widget if needed
-              return MaterialPageRoute(
-                builder: (context) => Builder(
-                  builder: (context) {
-                    if (!connectivityService.isOnline) {
-                      return Scaffold(
-                        body: Stack(
-                          children: [
-                            routes[routeSettings.name]!(context),
-                            Positioned(
-                              top: 0,
-                              left: 0,
-                              right: 0,
-                              child: Container(
-                                color: Colors.red,
-                                padding: EdgeInsets.all(8.0),
-                                child: Text(
-                                  'No Internet Connection',
-                                  style: TextStyle(color: Colors.white),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }
-                    return routes[routeSettings.name]!(context);
-                  },
-                ),
-              );
+              final builder = routes[settings.name];
+              if (builder != null) {
+                return MaterialPageRoute(
+                  builder: (context) => OfflineBannerWrapper(
+                    child: builder(context),
+                  ),
+                );
+              } else {
+                return MaterialPageRoute(
+                  builder: (context) => OfflineBannerWrapper(
+                    child: const Scaffold(
+                      body: Center(child: Text('404 — Page not found')),
+                    ),
+                  ),
+                );
+              }
             },
           );
         },

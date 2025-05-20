@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:hive/hive.dart';
+
 import '../../services/api_service.dart';
 import '../../providers/app_providers.dart';
-import "package:shared_preferences/shared_preferences.dart";
+import '../models/auth_data.dart';
+import 'offline_pin_login_screen.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -33,9 +37,7 @@ class _SignInScreenState extends State<SignInScreen> {
         toolbarHeight: 90,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+          onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
           'Sign In',
@@ -57,122 +59,52 @@ class _SignInScreenState extends State<SignInScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text(
-                    'Email',
-                    style: TextStyle(
-                      fontFamily: 'TTTravels',
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
+                  const Text('Email', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
                   const SizedBox(height: 10),
-                  SizedBox(
-                    child: TextFormField(
-                      controller: _emailController,
-                      decoration: const InputDecoration(
-                        hintText: 'Enter email',
-                        contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 10),
-                        border: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.grey),
-                          borderRadius: BorderRadius.all(Radius.circular(8)),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.grey),
-                          borderRadius: BorderRadius.all(Radius.circular(8)),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.black),
-                          borderRadius: BorderRadius.all(Radius.circular(8)),
-                        ),
-                      ),
-                      style: const TextStyle(fontFamily: 'TTTravels', fontSize: 14),
-                      keyboardType: TextInputType.emailAddress,
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Email is required';
-                        }
-                        if (!RegExp(r'^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value.trim())) {
-                          return 'Please enter a valid email';
-                        }
-                        return null;
-                      },
+                  TextFormField(
+                    controller: _emailController,
+                    decoration: const InputDecoration(
+                      hintText: 'Enter email',
+                      border: OutlineInputBorder(),
                     ),
+                    keyboardType: TextInputType.emailAddress,
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) return 'Email is required';
+                      if (!RegExp(r'^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value.trim())) {
+                        return 'Please enter a valid email';
+                      }
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 20),
-                  const Text(
-                    'Password',
-                    style: TextStyle(
-                      fontFamily: 'TTTravels',
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
+                  const Text('Password', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
                   const SizedBox(height: 10),
-                  SizedBox(
-                    child: TextFormField(
-                      controller: _passwordController,
-                      decoration: InputDecoration(
-                        hintText: 'Enter password',
-                        contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              _isPasswordVisible = !_isPasswordVisible;
-                            });
-                          },
-                        ),
-                        border: const OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.grey),
-                          borderRadius: BorderRadius.all(Radius.circular(8)),
-                        ),
-                        enabledBorder: const OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.grey),
-                          borderRadius: BorderRadius.all(Radius.circular(8)),
-                        ),
-                        focusedBorder: const OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.black),
-                          borderRadius: BorderRadius.all(Radius.circular(8)),
-                        ),
+                  TextFormField(
+                    controller: _passwordController,
+                    obscureText: !_isPasswordVisible,
+                    decoration: InputDecoration(
+                      hintText: 'Enter password',
+                      suffixIcon: IconButton(
+                        icon: Icon(_isPasswordVisible ? Icons.visibility : Icons.visibility_off),
+                        onPressed: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
                       ),
-                      style: const TextStyle(fontFamily: 'TTTravels', fontSize: 14),
-                      obscureText: !_isPasswordVisible,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Password is required';
-                        }
-                        if (value.length < 8) {
-                          return 'Password must be at least 8 characters';
-                        }
-                        if (!RegExp(r'^(?=.*[A-Z])(?=.*[0-9]).*$').hasMatch(value)) {
-                          return 'Password must contain at least one uppercase letter and one number';
-                        }
-                        return null;
-                      },
+                      border: const OutlineInputBorder(),
                     ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) return 'Password is required';
+                      if (value.length < 8) return 'Password must be at least 8 characters';
+                      if (!RegExp(r'^(?=.*[A-Z])(?=.*[0-9]).*$').hasMatch(value)) {
+                        return 'Must contain uppercase and number';
+                      }
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 12),
                   Align(
                     alignment: Alignment.centerLeft,
                     child: TextButton(
-                      onPressed: () {
-                        debugPrint('Forgot password pressed');
-                      },
-                      style: TextButton.styleFrom(
-                        padding: EdgeInsets.zero,
-                        minimumSize: Size.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                      child: const Text(
-                        'Forgot Password?',
-                        style: TextStyle(
-                          fontFamily: 'TTTravels',
-                          fontSize: 14,
-                          color: Colors.black,
-                        ),
-                      ),
+                      onPressed: () => debugPrint('Forgot password pressed'),
+                      child: const Text('Forgot Password?', style: TextStyle(color: Colors.black)),
                     ),
                   ),
                   const SizedBox(height: 30),
@@ -186,55 +118,33 @@ class _SignInScreenState extends State<SignInScreen> {
                         ? const SizedBox(
                       height: 16,
                       width: 16,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      ),
+                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                     )
-                        : const Text(
-                      'Sign In',
-                      style: TextStyle(
-                        fontFamily: 'TTTravels',
-                        fontSize: 16,
-                        color: Colors.white,
-                      ),
-                    ),
+                        : const Text('Sign In', style: TextStyle(color: Colors.white)),
                   ),
                   const SizedBox(height: 16),
-                  Center(
-                    child: TextButton(
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/signup');
-                      },
-                      child: const Text(
-                        "Don't have an account? Sign Up",
-                        style: TextStyle(
-                          fontFamily: 'TTTravels',
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
+                  TextButton(
+                    onPressed: () => Navigator.pushNamed(context, '/signup'),
+                    child: const Text("Don't have an account? Sign Up"),
                   ),
                   const SizedBox(height: 16),
-                  Center(
-                    child: TextButton(
-                      onPressed: () {
-                        Provider.of<GuestModeProvider>(context, listen: false).setGuestMode(true);
-                        Navigator.pushNamedAndRemoveUntil(
-                          context,
-                          '/explore',
-                              (route) => false,
-                        );
-                      },
-                      child: const Text(
-                        'Continue as Guest',
-                        style: TextStyle(
-                          fontFamily: 'TTTravels',
-                          fontSize: 14,
-                          color: Colors.blue,
-                        ),
-                      ),
-                    ),
+                  TextButton(
+                    onPressed: () {
+                      Provider.of<GuestModeProvider>(context, listen: false).setGuestMode(true);
+                      Navigator.pushNamedAndRemoveUntil(context, '/explore', (route) => false);
+                    },
+                    child: const Text('Continue as Guest', style: TextStyle(color: Colors.blue)),
+                  ),
+                  const SizedBox(height: 16),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const OfflinePinLoginScreen()),
+                      );
+                    },
+                    child: const Text('Login via PIN (Offline Mode)',
+                        style: TextStyle(color: Colors.deepPurple)),
                   ),
                 ],
               ),
@@ -247,9 +157,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
   Future<void> _signIn() async {
     if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isLoading = true;
-      });
+      setState(() => _isLoading = true);
 
       try {
         final email = _emailController.text.trim();
@@ -257,9 +165,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
         final loginResponse = await _apiService.loginUser(email, password);
 
-        if (loginResponse['token'] == null) {
-          throw Exception('Invalid response from server');
-        }
+        if (loginResponse['token'] == null) throw Exception('Invalid response from server');
 
         final token = loginResponse['token'];
         final user = loginResponse['user'];
@@ -274,41 +180,48 @@ class _SignInScreenState extends State<SignInScreen> {
         await prefs.setString('fullName', user['fullName']);
         await prefs.setString('email', user['email']);
 
-        if (mounted) {
-          Provider.of<GuestModeProvider>(context, listen: false).setGuestMode(false);
-          Navigator.pushNamedAndRemoveUntil(
-            context,
-            '/explore',
-                (route) => false,
-          );
+        final authBox = Hive.box<AuthData>('auth');
+        final existing = authBox.get('session');
+
+        // Сохраняем с пустым PIN, если его ещё нет
+        await authBox.put('session', AuthData(
+          token: token,
+          pin: existing?.pin ?? '',
+          userId: user['id'],
+          fullName: user['fullName'],
+          email: user['email'],
+        ));
+
+        if (!mounted) return;
+
+        Provider.of<GuestModeProvider>(context, listen: false).setGuestMode(false);
+
+        final updated = authBox.get('session');
+
+        if (updated != null && updated.pin.isNotEmpty) {
+          Navigator.pushNamedAndRemoveUntil(context, '/explore', (route) => false);
+        } else {
+          Navigator.pushNamedAndRemoveUntil(context, '/set-pin', (route) => false);
         }
       } catch (error) {
-        if (mounted) {
-          String errorMessage;
-          if (error.toString().contains('401')) {
-            errorMessage = 'Invalid email or password';
-          } else if (error.toString().contains('network')) {
-            errorMessage = 'Network error. Please check your connection and try again';
-          } else if (error.toString().contains('timeout')) {
-            errorMessage = 'Request timed out. Please try again later';
-          } else {
-            errorMessage = 'Login failed: ${error.toString()}';
-          }
+        if (!mounted) return;
 
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(errorMessage),
-              backgroundColor: Colors.red,
-              duration: const Duration(seconds: 3),
-            ),
-          );
+        String errorMessage;
+        if (error.toString().contains('401')) {
+          errorMessage = 'Invalid email or password';
+        } else if (error.toString().contains('network')) {
+          errorMessage = 'Network error. Please check your connection.';
+        } else if (error.toString().contains('timeout')) {
+          errorMessage = 'Request timed out. Please try again.';
+        } else {
+          errorMessage = 'Login failed: ${error.toString()}';
         }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
+        );
       } finally {
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
-        }
+        if (mounted) setState(() => _isLoading = false);
       }
     }
   }

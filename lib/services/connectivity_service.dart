@@ -1,3 +1,5 @@
+// lib/services/connectivity_service.dart
+
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 
@@ -12,12 +14,16 @@ class ConnectivityService with ChangeNotifier {
   }
 
   Future<void> _checkConnectivity() async {
-    final results = await Connectivity().checkConnectivity();
-    _updateConnectionStatus(results);
+    final result = await Connectivity().checkConnectivity();
+    _updateConnectionStatus(result);
   }
 
-  void _updateConnectionStatus(List<ConnectivityResult> results) {
-    _isOnline = results.any((result) => result != ConnectivityResult.none);
-    notifyListeners();
+  void _updateConnectionStatus(ConnectivityResult result) {
+    final online = result != ConnectivityResult.none;
+
+    if (_isOnline != online) {
+      _isOnline = online;
+      notifyListeners();
+    }
   }
 }
