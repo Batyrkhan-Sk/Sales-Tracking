@@ -62,31 +62,31 @@ class _WarehouseDetailsScreenState extends State<WarehouseDetailsScreen>
           {
             'name': 'Cotton armchair',
             'price': 259.99,
-            'imageUrl': 'assets/images/armchair.png',
+            'imageUrl': 'https://moveketeam-prod.s3.eu-north-1.amazonaws.com/images/armchair.png',
             'category': 'Chair',
           },
           {
             'name': 'Wood table',
             'price': 349.99,
-            'imageUrl': 'assets/images/table.png',
+            'imageUrl': 'https://moveketeam-prod.s3.eu-north-1.amazonaws.com/images/table.png',
             'category': 'Table',
           },
           {
             'name': 'Home decor set',
             'price': 129.99,
-            'imageUrl': 'assets/images/cabinet.png',
+            'imageUrl': 'https://moveketeam-prod.s3.eu-north-1.amazonaws.com/images/cabinet.png',
             'category': 'Decor',
           },
           {
             'name': 'Modern lamp',
             'price': 84.50,
-            'imageUrl': 'assets/images/lamp.png',
+            'imageUrl': 'https://moveketeam-prod.s3.eu-north-1.amazonaws.com/images/lamp.png',
             'category': 'Decor',
           },
           {
             'name': 'Comfort sofa',
             'price': 599.99,
-            'imageUrl': 'assets/images/sofa.png',
+            'imageUrl': 'https://moveketeam-prod.s3.eu-north-1.amazonaws.com/images/sofa.png',
             'category': 'Chair',
           },
         ];

@@ -15,5 +15,11 @@
   "email": "Email",
   "phone": "Phone",
   "user": "user",
-  "administratorRole": "Administrator"
+  "administratorRole": "Administrator",
+  "edit": "Edit",
+  "cancel": "Cancel",
+  "save": "Save",
+  "profileUpdated": "Profile updated successfully",
+  "updateFailed": "Failed to update profile",
+  "password": "Password"
 }

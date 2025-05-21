@@ -26,4 +26,19 @@ class AuthData extends HiveObject {
     required this.fullName,
     required this.email,
   });
+  AuthData copyWith({
+    String? token,
+    String? userId,
+    String? fullName,
+    String? email,
+    String? pin,
+  }) {
+    return AuthData(
+      token: token ?? this.token,
+      userId: userId ?? this.userId,
+      fullName: fullName ?? this.fullName,
+      email: email ?? this.email,
+      pin: pin ?? this.pin,
+    );
+  }
 }

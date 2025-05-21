@@ -11,8 +11,8 @@ import '../presentation/models/auth_data.dart';
 import 'connectivity_service.dart';
 
 class ApiService {
-  final String baseUrl = '13.53.40.246';
-  final bool devMode = true;
+  final String baseUrl = 'http://13.53.40.246:5000/api';
+  final bool devMode = false;
 
   static const String _warehouseCacheBox = 'warehouseCache';
   static const String _userCacheBox = 'userCache';
@@ -215,5 +215,42 @@ class ApiService {
     final authBox = await Hive.openBox<AuthData>('auth');
     final auth = authBox.get('session');
     return auth != null && auth.token.isNotEmpty;
+  }
+  Future<bool> updateProfile({required String fullName, String? password}) async {
+    if (devMode) {
+      await Future.delayed(const Duration(milliseconds: 300));
+      return true;
+    }
+
+    final authBox = await Hive.openBox<AuthData>('auth');
+    final auth = authBox.get('session');
+    if (auth == null) throw Exception('Not logged in');
+
+    final response = await http.patch(
+      Uri.parse('$baseUrl/users/profile'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ${auth.token}',
+      },
+      body: jsonEncode({
+        'fullName': fullName,
+        'password': password ?? '',
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final updatedUser = User.fromJson(json.decode(response.body));
+      await _userBox.put('currentUser', updatedUser.toJson());
+
+      // Обновим сессию, если нужно
+      await authBox.put(
+        'session',
+        auth.copyWith(fullName: updatedUser.fullName),
+      );
+
+      return true;
+    } else {
+      throw Exception('Failed to update profile');
+    }
   }
 }
