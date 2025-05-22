@@ -112,9 +112,13 @@ class _ExploreScreenState extends State<ExploreScreen> {
                         ),
                       );
                     } else if (snapshot.hasError) {
+                      // 🐞 лог ошибки в консоль
+                      debugPrint('[WAREHOUSE LOAD ERROR] ${snapshot.error}');
+
                       return _buildErrorWidget(
-                        'Failed to load warehouses',
+                        snapshot.error.toString(), // ✅ покажем текст ошибки
                             () {
+                          debugPrint('[WAREHOUSE RETRY]');
                           setState(() {
                             _warehousesFuture = _apiService.fetchWarehouses();
                           });
@@ -133,7 +137,6 @@ class _ExploreScreenState extends State<ExploreScreen> {
                     }
 
                     final warehouses = snapshot.data!;
-
                     return SingleChildScrollView(
                       child: Padding(
                         padding: const EdgeInsets.all(16.0),
@@ -232,6 +235,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          Icon(Icons.error_outline, color: errorColor, size: 48),
+          const SizedBox(height: 12),
           Text(
             message,
             style: TextStyle(
@@ -239,11 +244,13 @@ class _ExploreScreenState extends State<ExploreScreen> {
               fontSize: 16,
               color: errorColor,
             ),
+            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
-          ElevatedButton(
+          ElevatedButton.icon(
+            icon: const Icon(Icons.refresh),
             onPressed: onRetry,
-            child: const Text('Retry'),
+            label: const Text('Retry'),
           ),
         ],
       ),

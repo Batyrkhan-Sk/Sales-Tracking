@@ -54,43 +54,10 @@ class _WarehouseDetailsScreenState extends State<WarehouseDetailsScreen>
     });
 
     try {
-      // Здесь можно использовать fetchWarehouseDetails для реальных данных
-      // final warehouseDetails = await _apiService.fetchWarehouseDetails(widget.warehouse.id);
-
+      final items = await _apiService.fetchFurnitureItems(); // загружаем товары с /furniture
       setState(() {
-        products = [
-          {
-            'name': 'Cotton armchair',
-            'price': 259.99,
-            'imageUrl': 'https://moveketeam-prod.s3.eu-north-1.amazonaws.com/images/armchair.png',
-            'category': 'Chair',
-          },
-          {
-            'name': 'Wood table',
-            'price': 349.99,
-            'imageUrl': 'https://moveketeam-prod.s3.eu-north-1.amazonaws.com/images/table.png',
-            'category': 'Table',
-          },
-          {
-            'name': 'Home decor set',
-            'price': 129.99,
-            'imageUrl': 'https://moveketeam-prod.s3.eu-north-1.amazonaws.com/images/cabinet.png',
-            'category': 'Decor',
-          },
-          {
-            'name': 'Modern lamp',
-            'price': 84.50,
-            'imageUrl': 'https://moveketeam-prod.s3.eu-north-1.amazonaws.com/images/lamp.png',
-            'category': 'Decor',
-          },
-          {
-            'name': 'Comfort sofa',
-            'price': 599.99,
-            'imageUrl': 'https://moveketeam-prod.s3.eu-north-1.amazonaws.com/images/sofa.png',
-            'category': 'Chair',
-          },
-        ];
-        filteredProducts = products; // Изначально отображаем все продукты
+        products = items;
+        filteredProducts = items;
         isLoading = false;
       });
     } catch (e) {
@@ -98,7 +65,7 @@ class _WarehouseDetailsScreenState extends State<WarehouseDetailsScreen>
         isLoading = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error loading warehouse details: $e')),
+        SnackBar(content: Text('Error loading furniture: $e')),
       );
     }
   }

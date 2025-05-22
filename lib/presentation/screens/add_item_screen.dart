@@ -1,124 +1,120 @@
 import 'package:flutter/material.dart';
+import 'package:sales_tracking/services/api_service.dart';
 
 class AddItemPage extends StatefulWidget {
   const AddItemPage({super.key});
 
   @override
-  _AddItemPageState createState() => _AddItemPageState();
+  State<AddItemPage> createState() => _AddItemPageState();
 }
 
 class _AddItemPageState extends State<AddItemPage> {
-  int _quantity = 1;
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _imageUrlController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _widthController = TextEditingController();
+  final TextEditingController _heightController = TextEditingController();
+  final TextEditingController _depthController = TextEditingController();
+  final TextEditingController _priceController = TextEditingController();
+
+  void _submitItem() async {
+    final item = {
+      "name": _nameController.text.trim(),
+      "imageUrl": _imageUrlController.text.trim(),
+      "description": _descriptionController.text.trim(),
+      "dimensions": {
+        "width": double.tryParse(_widthController.text) ?? 0,
+        "height": double.tryParse(_heightController.text) ?? 0,
+        "depth": double.tryParse(_depthController.text) ?? 0,
+      },
+      "price": double.tryParse(_priceController.text) ?? 0,
+    };
+
+    try {
+      await ApiService().addFurnitureItem(item);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Furniture item added successfully')),
+        );
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-        title: const Text('Add items'),
+        title: const Text('Add Furniture'),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: ListView(
           children: [
-            const Text('How many ?'),
-            const SizedBox(height: 8),
+            TextField(
+              controller: _nameController,
+              decoration: const InputDecoration(labelText: 'Name'),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _imageUrlController,
+              decoration: const InputDecoration(labelText: 'Image URL'),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _descriptionController,
+              maxLines: 3,
+              decoration: const InputDecoration(labelText: 'Description'),
+            ),
+            const SizedBox(height: 12),
+            const Text('Dimensions (cm)', style: TextStyle(fontWeight: FontWeight.bold)),
             Row(
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                IconButton(
-                  icon: const Icon(Icons.remove_circle_outline),
-                  onPressed: () {
-                    setState(() {
-                      if (_quantity > 1) _quantity--;
-                    });
-                  },
+                Expanded(
+                  child: TextField(
+                    controller: _widthController,
+                    decoration: const InputDecoration(labelText: 'Width'),
+                    keyboardType: TextInputType.number,
+                  ),
                 ),
-                Text(
-                  '$_quantity',
-                  style: const TextStyle(fontSize: 18),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextField(
+                    controller: _heightController,
+                    decoration: const InputDecoration(labelText: 'Height'),
+                    keyboardType: TextInputType.number,
+                  ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.add_circle_outline),
-                  onPressed: () {
-                    setState(() {
-                      _quantity++;
-                    });
-                  },
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextField(
+                    controller: _depthController,
+                    decoration: const InputDecoration(labelText: 'Depth'),
+                    keyboardType: TextInputType.number,
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            const Text('Add photo'),
-            const SizedBox(height: 8),
-            Center(
-              child: Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(
-                  Icons.add,
-                  size: 40,
-                  color: Colors.black54,
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            const Text('Description (Note e.g item description and dimension)'),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             TextField(
-              maxLines: 4,
-              decoration: InputDecoration(
-                filled: true,
-                fillColor: Colors.grey[100],
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            const Text('Price'),
-            const SizedBox(height: 8),
-            TextField(
-              decoration: InputDecoration(
-                hintText: 'Enter price',
-                filled: true,
-                fillColor: Colors.grey[100],
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide.none,
-                ),
-              ),
+              controller: _priceController,
+              decoration: const InputDecoration(labelText: 'Price'),
               keyboardType: TextInputType.number,
             ),
             const SizedBox(height: 24),
-            Center(
-              child: ElevatedButton(
-                onPressed: () {},
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green[800],
-                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                ),
-                child: const Text(
-                  'Add',
-                  style: TextStyle(color: Colors.white, fontSize: 16),
-                ),
+            ElevatedButton(
+              onPressed: _submitItem,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green[700],
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
               ),
+              child: const Text('Add Furniture', style: TextStyle(fontSize: 16)),
             ),
           ],
         ),

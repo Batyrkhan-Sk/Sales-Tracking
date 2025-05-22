@@ -89,26 +89,54 @@ class ApiService {
   Future<List<Warehouse>> fetchWarehouses({bool forceRefresh = false}) async {
     if (devMode) {
       return [
-        Warehouse(id: '1', name: 'Mock A', imageUrl: '', description: '', dimensions: {}, price: 199.0),
-        Warehouse(id: '2', name: 'Mock B', imageUrl: '', description: '', dimensions: {}, price: 299.0),
+        Warehouse(
+          id: '1',
+          name: 'Mock Warehouse',
+          capacity: 5000,
+          currentStock: 1200,
+          address: 'Abay 123',
+          city: 'Almaty',
+          country: 'Kazakhstan',
+          latitude: 40.7128,
+          longitude: -74.006,
+          isActive: true,
+        ),
       ];
     }
 
+    final authBox = await Hive.openBox<AuthData>('auth');
+    final auth = authBox.get('session');
+    if (auth == null) throw Exception('Not logged in');
+
     if (!connectivityService.isOnline && !forceRefresh && _warehouseBox.isNotEmpty) {
-      return _warehouseBox.values.map((e) => Warehouse.fromJson(Map<String, dynamic>.from(e))).toList();
+      return _warehouseBox.values
+          .map((e) => Warehouse.fromJson(Map<String, dynamic>.from(e)))
+          .toList();
     }
 
-    final response = await http.get(Uri.parse('$baseUrl/furniture'));
+    final response = await http.get(
+      Uri.parse('$baseUrl/warehouses'),
+      headers: {'Authorization': 'Bearer ${auth.token}'},
+    );
+
     if (response.statusCode == 200) {
-      final List<dynamic> data = json.decode(response.body);
-      final warehouses = data.map((e) => Warehouse.fromJson(e)).toList();
-      await _warehouseBox.clear();
-      for (var w in warehouses) {
-        await _warehouseBox.add(w.toJson());
+      debugPrint('[WAREHOUSES OK] ${response.body}');
+      try {
+        final List<dynamic> data = json.decode(response.body);
+        final warehouses = data.map((e) => Warehouse.fromJson(e)).toList();
+
+        await _warehouseBox.clear();
+        for (var w in warehouses) {
+          await _warehouseBox.add(w.toJson());
+        }
+
+        return warehouses;
+      } catch (e) {
+        throw Exception('JSON parse failed: $e');
       }
-      return warehouses;
     } else {
-      throw Exception('Failed to load warehouses');
+      debugPrint('[WAREHOUSES ERROR] ${response.statusCode}: ${response.body}');
+      throw Exception('Failed to load warehouses: ${response.statusCode} ${response.body}');
     }
   }
 
@@ -184,7 +212,12 @@ class ApiService {
 
   Future<User> getCurrentUser({bool forceRefresh = false}) async {
     if (devMode) {
-      return User(id: 'mock-id', fullName: 'Amir', email: 'amir@mock.com');
+      return User(
+        id: 'mock-id',
+        fullName: 'Amir Syrymbetov',
+        email: 'amir@mock.com',
+        role: 'moderator',
+      );
     }
 
     final authBox = await Hive.openBox<AuthData>('auth');
@@ -192,16 +225,21 @@ class ApiService {
     if (auth == null) throw Exception('Not logged in');
 
     final response = await http.get(
-      Uri.parse('$baseUrl/users/me'),
+      Uri.parse('$baseUrl/users/profile'),
       headers: {'Authorization': 'Bearer ${auth.token}'},
     );
 
+    debugPrint('[RAW BODY] ${response.body}');
+
     if (response.statusCode == 200) {
-      final user = User.fromJson(json.decode(response.body));
+      final Map<String, dynamic> data = json.decode(response.body);
+      final userJson = data['user']; // ⬅️ это важно!
+      final user = User.fromJson(userJson);
+
       await _userBox.put('currentUser', user.toJson());
       return user;
     } else {
-      throw Exception('Failed to fetch user');
+      throw Exception('Failed to fetch user: ${response.statusCode} ${response.body}');
     }
   }
 
@@ -216,7 +254,7 @@ class ApiService {
     final auth = authBox.get('session');
     return auth != null && auth.token.isNotEmpty;
   }
-  Future<bool> updateProfile({required String fullName, String? password}) async {
+  Future<bool> updateProfile({String? fullName, String? password}) async {
     if (devMode) {
       await Future.delayed(const Duration(milliseconds: 300));
       return true;
@@ -226,31 +264,110 @@ class ApiService {
     final auth = authBox.get('session');
     if (auth == null) throw Exception('Not logged in');
 
+    final Map<String, dynamic> body = {};
+    if (fullName != null && fullName.trim().isNotEmpty) {
+      body['fullName'] = fullName.trim();
+    }
+    if (password != null && password.trim().isNotEmpty) {
+      body['password'] = password.trim();
+    }
+
+    if (body.isEmpty) {
+      throw Exception('Nothing to update');
+    }
+
     final response = await http.patch(
       Uri.parse('$baseUrl/users/profile'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ${auth.token}',
       },
-      body: jsonEncode({
-        'fullName': fullName,
-        'password': password ?? '',
-      }),
+      body: jsonEncode(body),
     );
 
     if (response.statusCode == 200) {
       final updatedUser = User.fromJson(json.decode(response.body));
       await _userBox.put('currentUser', updatedUser.toJson());
-
-      // Обновим сессию, если нужно
-      await authBox.put(
-        'session',
-        auth.copyWith(fullName: updatedUser.fullName),
-      );
-
+      await authBox.put('session', auth.copyWith(fullName: updatedUser.fullName));
       return true;
     } else {
       throw Exception('Failed to update profile');
     }
   }
+  Future<void> addFurnitureItem(Map<String, dynamic> furnitureItem) async {
+    final authBox = await Hive.openBox<AuthData>('auth');
+    final auth = authBox.get('session');
+    if (auth == null) throw Exception('Not logged in');
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/furniture'),
+      headers: {
+        'Authorization': 'Bearer ${auth.token}',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(furnitureItem),
+    );
+
+    if (response.statusCode == 201) {
+      debugPrint('[ADD FURNITURE] Successfully added item');
+    } else {
+      debugPrint('[ADD FURNITURE] Error: ${response.statusCode} ${response.body}');
+      throw Exception('Failed to add furniture: ${response.body}');
+    }
+  }
+  Future<List<Map<String, dynamic>>> fetchFurnitureItems() async {
+    final authBox = await Hive.openBox<AuthData>('auth');
+    final auth = authBox.get('session');
+    if (auth == null) throw Exception('Not logged in');
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/furniture'),
+      headers: {
+        'Authorization': 'Bearer ${auth.token}',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.cast<Map<String, dynamic>>();
+    } else {
+      throw Exception('Failed to fetch furniture: ${response.statusCode} ${response.body}');
+    }
+  }
+  Future<Map<String, dynamic>> scanFurniture(String code) async {
+    if (devMode) {
+      // Вернём мок-данные, если включён режим разработки
+      await Future.delayed(Duration(milliseconds: 500));
+      return {
+        'id': 'mock-id',
+        'name': 'Mock Furniture',
+        'description': 'This is a mock furniture item from QR code.',
+        'price': 199.99,
+        'dimensions': {'length': 100, 'width': 50, 'height': 60},
+      };
+    }
+
+    try {
+      final response = await http.post(
+        Uri.parse('http://$baseUrl:5000/api/furniture/scan'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'code': code}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true && data['furniture'] != null) {
+          return data['furniture'];
+        } else {
+          throw Exception('Furniture not found or response invalid');
+        }
+      } else {
+        throw Exception('Request failed: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Ошибка при сканировании: $e');
+      throw Exception('Ошибка при сканировании: $e');
+    }
+  }
 }
+

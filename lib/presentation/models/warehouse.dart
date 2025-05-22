@@ -1,41 +1,62 @@
 class Warehouse {
   final String id;
   final String name;
-  final String imageUrl;
-  final String? description;
-  final Map<String, dynamic>? dimensions;
-  final double? price;
+  final int capacity;
+  final int currentStock;
+  final String address;
+  final String city;
+  final String country;
+  final double latitude;
+  final double longitude;
+  final bool isActive;
 
   Warehouse({
     required this.id,
     required this.name,
-    required this.imageUrl,
-    this.description,
-    this.dimensions,
-    this.price,
+    required this.capacity,
+    required this.currentStock,
+    required this.address,
+    required this.city,
+    required this.country,
+    required this.latitude,
+    required this.longitude,
+    required this.isActive,
   });
 
-  // Create warehouse from JSON
   factory Warehouse.fromJson(Map<String, dynamic> json) {
+    final location = json['location'] ?? {};
+    final coordinates = location['coordinates'] ?? {};
+
     return Warehouse(
-      id: json['_id'], // MongoDB использует _id
-      name: json['name'],
-      imageUrl: json['imageUrl'], // Обратите внимание: не image_url, а imageUrl
-      description: json['description'],
-      dimensions: json['dimensions'],
-      price: json['price'] != null ? json['price'].toDouble() : null,
+      id: json['_id'] ?? json['id'] ?? '',
+      name: json['name'] ?? '',
+      capacity: json['capacity'] ?? 0,
+      currentStock: json['currentStock'] ?? 0,
+      address: location['address'] ?? '',
+      city: location['city'] ?? '',
+      country: location['country'] ?? '',
+      latitude: (coordinates['lat'] ?? 0).toDouble(),
+      longitude: (coordinates['lng'] ?? 0).toDouble(),
+      isActive: json['isActive'] ?? false,
     );
   }
 
-  // Convert warehouse to JSON
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
+      '_id': id,
       'name': name,
-      'imageUrl': imageUrl,
-      'description': description,
-      'dimensions': dimensions,
-      'price': price,
+      'capacity': capacity,
+      'currentStock': currentStock,
+      'location': {
+        'address': address,
+        'city': city,
+        'country': country,
+        'coordinates': {
+          'lat': latitude,
+          'lng': longitude,
+        },
+      },
+      'isActive': isActive,
     };
   }
 }

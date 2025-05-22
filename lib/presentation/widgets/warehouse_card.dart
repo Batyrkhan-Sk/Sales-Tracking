@@ -9,138 +9,97 @@ class WarehouseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final address = '${warehouse.city}, ${warehouse.country}';
+
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
+            // Левая часть: Текст
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     warehouse.name,
                     style: const TextStyle(
                       fontFamily: 'TTTravels',
                       fontSize: 16,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: FontWeight.w600,
                       color: Color(0xFF3D4A28),
                     ),
                   ),
-                  if (warehouse.price != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4.0),
-                      child: Text(
-                        '\$${warehouse.price!.toStringAsFixed(2)}',
-                        style: const TextStyle(
-                          fontFamily: 'TTTravels',
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
-                      ),
+                  const SizedBox(height: 4),
+                  Text(
+                    address,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: Colors.black54,
                     ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Capacity: ${warehouse.capacity}',
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                  Text(
+                    'Stock: ${warehouse.currentStock}',
+                    style: const TextStyle(fontSize: 13),
+                  ),
                   const SizedBox(height: 12),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 16.0),
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => WarehouseDetailsScreen(
-                              warehouse: warehouse,
-                            ),
-                          ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: Colors.black,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                          side: const BorderSide(color: Colors.black12),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              WarehouseDetailsScreen(warehouse: warehouse),
                         ),
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.black,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        side: const BorderSide(color: Colors.black12),
                       ),
-                      child: const Text(
-                        'Continue',
-                        style: TextStyle(
-                          fontFamily: 'TTTravels',
-                          fontSize: 14,
-                          color: Colors.black,
-                        ),
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    ),
+                    child: const Text(
+                      'Continue',
+                      style: TextStyle(
+                        fontFamily: 'TTTravels',
+                        fontSize: 14,
+                        color: Colors.black,
                       ),
                     ),
                   ),
                 ],
               ),
             ),
+
+            const SizedBox(width: 12),
+
+            // Правая часть: изображение/заглушка
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: _buildImage(),
-            )
+              child: Container(
+                width: 100,
+                height: 100,
+                color: Colors.grey[300],
+                child: const Center(
+                  child: Icon(Icons.warehouse, size: 40, color: Colors.grey),
+                ),
+              ),
+            ),
           ],
         ),
       ),
     );
-  }
-
-  Widget _buildImage() {
-    bool isValidUrl = warehouse.imageUrl.startsWith('http') ||
-        warehouse.imageUrl.startsWith('https');
-
-    if (isValidUrl) {
-      return Image.network(
-        warehouse.imageUrl,
-        width: 120,
-        height: 120,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          return Container(
-            width: 120,
-            height: 120,
-            color: Colors.grey[300],
-            child: const Center(
-              child: Icon(Icons.image_not_supported, color: Colors.grey),
-            ),
-          );
-        },
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) return child;
-          return Center(
-            child: CircularProgressIndicator(
-              value: loadingProgress.expectedTotalBytes != null
-                  ? loadingProgress.cumulativeBytesLoaded /
-                  loadingProgress.expectedTotalBytes!
-                  : null,
-            ),
-          );
-        },
-      );
-    }
-    else if (warehouse.imageUrl.contains('asset')) {
-      return Image.asset(
-        warehouse.imageUrl,
-        width: 120,
-        height: 120,
-        fit: BoxFit.cover,
-      );
-    }
-    else {
-      return Container(
-        width: 120,
-        height: 120,
-        color: Colors.grey[300],
-        child: const Center(
-          child: Text('No Image', style: TextStyle(color: Colors.grey)),
-        ),
-      );
-    }
   }
 }

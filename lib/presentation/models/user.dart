@@ -13,6 +13,17 @@ class User {
     this.role = '',
   });
 
+  /// Фабрика для создания из JSON
+  factory User.fromJson(Map<String, dynamic> json) {
+    return User(
+      id: json['id'] ?? json['_id'], // поддержка и `id`, и `_id`
+      fullName: json['fullName'] ?? '',
+      email: json['email'] ?? '',
+      role: json['role'] ?? '',
+    );
+  }
+
+  /// Преобразование в JSON — используется при регистрации / обновлении
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = {};
     if (id != null) data['id'] = id;
@@ -23,12 +34,25 @@ class User {
     return data;
   }
 
-  factory User.fromJson(Map<String, dynamic> json) {
+  /// Метод copyWith — удобно обновлять экземпляры
+  User copyWith({
+    String? id,
+    String? fullName,
+    String? email,
+    String? password,
+    String? role,
+  }) {
     return User(
-      id: json['id'],
-      fullName: json['fullName'] ?? '',
-      email: json['email'] ?? '',
-      role: json['role'] ?? '',
+      id: id ?? this.id,
+      fullName: fullName ?? this.fullName,
+      email: email ?? this.email,
+      password: password ?? this.password,
+      role: role ?? this.role,
     );
+  }
+
+  @override
+  String toString() {
+    return 'User(id: $id, name: $fullName, email: $email, role: $role)';
   }
 }

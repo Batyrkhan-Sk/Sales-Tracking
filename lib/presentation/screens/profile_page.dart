@@ -25,9 +25,7 @@ class _ProfilePageState extends State<ProfilePage> {
       future: _apiService.isLoggedIn(),
       builder: (context, loginSnapshot) {
         if (loginSnapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
+          return const Scaffold(body: Center(child: CircularProgressIndicator()));
         }
 
         final isLoggedIn = loginSnapshot.data ?? false;
@@ -56,69 +54,9 @@ class _ProfilePageState extends State<ProfilePage> {
           body: SingleChildScrollView(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  if (isGuestMode)
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      margin: const EdgeInsets.only(bottom: 16),
-                      decoration: BoxDecoration(
-                        color: Colors.amber.shade100,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.amber.shade700),
-                      ),
-                      width: double.infinity,
-                      child: Column(
-                        children: [
-                          Row(
-                            children: [
-                              Icon(Icons.info_outline, color: Colors.amber.shade900),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  AppLocalizations.of(context)!.guestModeLimitedAccess,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.amber.shade900,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            AppLocalizations.of(context)!.signInFeatures,
-                            style: TextStyle(
-                              color: Colors.amber.shade900,
-                              fontSize: 14,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          ElevatedButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => const SignInScreen()),
-                              );
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.amber.shade700,
-                              foregroundColor: Colors.white,
-                            ),
-                            child: Text(AppLocalizations.of(context)!.signIn),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                  if (isGuestMode)
-                    _buildGuestModeContent(context)
-                  else
-                    _buildLoggedInContent(context),
-                ],
-              ),
+              child: isGuestMode
+                  ? _buildGuestModeContent(context)
+                  : _buildLoggedInContent(context),
             ),
           ),
         );
@@ -136,43 +74,26 @@ class _ProfilePageState extends State<ProfilePage> {
             shape: BoxShape.circle,
             color: Colors.grey[300],
           ),
-          child: Icon(
-            Icons.person_outline,
-            size: 60,
-            color: Colors.grey[600],
-          ),
+          child: Icon(Icons.person_outline, size: 60, color: Colors.grey[600]),
         ),
         const SizedBox(height: 16),
         Text(
           AppLocalizations.of(context)!.guestUser,
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: Theme.of(context).colorScheme.onSurface,
-          ),
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface),
         ),
         const SizedBox(height: 24),
-
         Card(
-          margin: const EdgeInsets.symmetric(vertical: 8),
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 16),
                 Consumer<ThemeProvider>(
                   builder: (context, themeProvider, child) {
                     return ListTile(
-                      title: Text(
-                        AppLocalizations.of(context)!.darkMode,
-                        style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-                      ),
+                      title: Text(AppLocalizations.of(context)!.darkMode),
                       trailing: Switch(
                         value: themeProvider.themeMode == ThemeMode.dark,
-                        onChanged: (value) {
-                          themeProvider.toggleTheme();
-                        },
+                        onChanged: (_) => themeProvider.toggleTheme(),
                       ),
                     );
                   },
@@ -180,10 +101,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 Consumer<LanguageProvider>(
                   builder: (context, languageProvider, child) {
                     return ListTile(
-                      title: Text(
-                        AppLocalizations.of(context)!.language,
-                        style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-                      ),
+                      title: Text(AppLocalizations.of(context)!.language),
                       trailing: DropdownButton<Locale>(
                         value: languageProvider.locale,
                         items: [
@@ -201,11 +119,15 @@ class _ProfilePageState extends State<ProfilePage> {
                             languageProvider.setLocale(newLocale);
                           }
                         },
-                        style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-                        dropdownColor: Theme.of(context).colorScheme.surface,
                       ),
                     );
                   },
+                ),
+                const SizedBox(height: 12),
+                ElevatedButton(
+                  onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SignInScreen())),
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.amber.shade700, foregroundColor: Colors.white),
+                  child: Text(AppLocalizations.of(context)!.signIn),
                 ),
               ],
             ),
@@ -226,18 +148,10 @@ class _ProfilePageState extends State<ProfilePage> {
             children: [
               Icon(Icons.error_outline, size: 48, color: Theme.of(context).colorScheme.error),
               const SizedBox(height: 16),
-              Text(
-                AppLocalizations.of(context)!.unableToLoadUserData,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-              ),
+              Text(AppLocalizations.of(context)!.unableToLoadUserData),
               const SizedBox(height: 8),
               ElevatedButton(
-                onPressed: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => const SignInScreen()),
-                  );
-                },
+                onPressed: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const SignInScreen())),
                 child: Text(AppLocalizations.of(context)!.returnToLogin),
               ),
             ],
@@ -259,19 +173,12 @@ class _ProfilePageState extends State<ProfilePage> {
               child: Icon(Icons.person, size: 60, color: Colors.grey[700]),
             ),
             const SizedBox(height: 16),
-            Text(
-              user.fullName,
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
+            Text(user.fullName, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            Text(
-              localizations.administratorRole,
-              style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
-            ),
+            Text(localizations.administratorRole, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
             const SizedBox(height: 16),
 
             Card(
-              margin: const EdgeInsets.symmetric(vertical: 8),
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
@@ -279,29 +186,20 @@ class _ProfilePageState extends State<ProfilePage> {
                     TextField(
                       controller: _nameController,
                       enabled: _isEditing,
-                      decoration: InputDecoration(
-                        labelText: localizations.name,
-                        border: const OutlineInputBorder(),
-                      ),
+                      decoration: InputDecoration(labelText: localizations.name, border: const OutlineInputBorder()),
                     ),
                     const SizedBox(height: 12),
                     TextField(
                       controller: TextEditingController(text: email),
                       enabled: false,
-                      decoration: InputDecoration(
-                        labelText: localizations.email,
-                        border: const OutlineInputBorder(),
-                      ),
+                      decoration: InputDecoration(labelText: localizations.email, border: const OutlineInputBorder()),
                     ),
                     const SizedBox(height: 12),
                     if (_isEditing)
                       TextField(
                         controller: _passwordController,
                         obscureText: true,
-                        decoration: InputDecoration(
-                          labelText: localizations.password,
-                          border: const OutlineInputBorder(),
-                        ),
+                        decoration: InputDecoration(labelText: localizations.password, border: const OutlineInputBorder()),
                       ),
                     const SizedBox(height: 16),
                     Row(
@@ -309,11 +207,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       children: [
                         ElevatedButton.icon(
                           icon: Icon(_isEditing ? Icons.close : Icons.edit),
-                          onPressed: () {
-                            setState(() {
-                              _isEditing = !_isEditing;
-                            });
-                          },
+                          onPressed: () => setState(() => _isEditing = !_isEditing),
                           label: Text(_isEditing ? localizations.cancel : localizations.edit),
                         ),
                         if (_isEditing)
@@ -321,19 +215,19 @@ class _ProfilePageState extends State<ProfilePage> {
                             icon: const Icon(Icons.save),
                             onPressed: () async {
                               try {
+                                final newName = _nameController.text.trim();
+                                final newPassword = _passwordController.text.trim();
+
                                 await _apiService.updateProfile(
-                                  fullName: _nameController.text.trim(),
-                                  password: _passwordController.text.trim().isEmpty
-                                      ? null
-                                      : _passwordController.text.trim(),
+                                  fullName: newName != user.fullName ? newName : null,
+                                  password: newPassword.isNotEmpty ? newPassword : null,
                                 );
-                                setState(() {
-                                  _isEditing = false;
-                                });
+
+                                setState(() => _isEditing = false);
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(content: Text(localizations.profileUpdated)),
                                 );
-                              } catch (e) {
+                              } catch (_) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(content: Text(localizations.updateFailed)),
                                 );
@@ -342,6 +236,53 @@ class _ProfilePageState extends State<ProfilePage> {
                             label: Text(localizations.save),
                           ),
                       ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 8),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  children: [
+                    Consumer<ThemeProvider>(
+                      builder: (context, themeProvider, _) {
+                        return ListTile(
+                          title: Text(localizations.darkMode),
+                          trailing: Switch(
+                            value: themeProvider.themeMode == ThemeMode.dark,
+                            onChanged: (_) => themeProvider.toggleTheme(),
+                          ),
+                        );
+                      },
+                    ),
+                    Consumer<LanguageProvider>(
+                      builder: (context, languageProvider, _) {
+                        return ListTile(
+                          title: Text(localizations.language),
+                          trailing: DropdownButton<Locale>(
+                            value: languageProvider.locale,
+                            items: [
+                              DropdownMenuItem(
+                                value: const Locale('en', 'US'),
+                                child: Text(localizations.english),
+                              ),
+                              DropdownMenuItem(
+                                value: const Locale('ru', 'RU'),
+                                child: Text(localizations.russian),
+                              ),
+                            ],
+                            onChanged: (newLocale) {
+                              if (newLocale != null) {
+                                languageProvider.setLocale(newLocale);
+                              }
+                            },
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -357,16 +298,11 @@ class _ProfilePageState extends State<ProfilePage> {
     try {
       await _apiService.logout();
       if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const SignInScreen()),
-        );
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const SignInScreen()));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Logout failed: $e')),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Logout failed: $e')));
       }
     }
   }
