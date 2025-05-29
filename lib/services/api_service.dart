@@ -174,8 +174,7 @@ class ApiService {
 
       return data;
     } else {
-      debugPrint('Login failed: ${response.statusCode} - ${response.body}');
-      throw Exception('Login failed: ${response.statusCode} - ${response.body}');
+      throw Exception('Login failed');
     }
   }
 
@@ -369,49 +368,6 @@ class ApiService {
       print('Ошибка при сканировании: $e');
       throw Exception('Ошибка при сканировании: $e');
     }
-  }
-  Future<void> createWarehouse({
-    required String name,
-    required String address,
-    required String city,
-    required String country,
-    required double latitude,
-    required double longitude,
-    required int capacity,
-    required String managerId,
-  }) async {
-    final authBox = await Hive.openBox<AuthData>('auth');
-    final auth = authBox.get('session');
-    if (auth == null) throw Exception('Not logged in');
-
-    final response = await http.post(
-      Uri.parse('$baseUrl/warehouses'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ${auth.token}',
-      },
-      body: jsonEncode({
-        "name": name,
-        "location": {
-          "address": address,
-          "city": city,
-          "country": country,
-          "coordinates": {
-            "lat": latitude,
-            "lng": longitude,
-          }
-        },
-        "capacity": capacity,
-        "managerId": managerId,
-      }),
-    );
-
-    if (response.statusCode != 201) {
-      debugPrint('[WAREHOUSE ERROR] ${response.body}');
-      throw Exception('Failed to create warehouse');
-    }
-
-    debugPrint('[WAREHOUSE CREATED] ${response.body}');
   }
 }
 

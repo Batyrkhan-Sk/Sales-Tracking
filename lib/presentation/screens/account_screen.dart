@@ -142,17 +142,27 @@ class _AccountScreenState extends State<AccountScreen> {
                       const Divider(),
                       MenuItem(icon: Icons.person, text: 'Profile', onTap: () => Navigator.pushNamed(context, '/profile')),
                       const Divider(),
-                      MenuItem(icon: Icons.hub_outlined, text: 'Role Management', onTap: () => Navigator.pushNamed(context, '/manage-roles')),
+                      MenuItem(
+                          icon: Icons.hub_outlined,
+                          text: 'Role Management',
+                          onTap: () => Navigator.pushNamed(context, '/manage-roles')),
                       const Divider(),
-                      MenuItem(icon: Icons.add_box_outlined, text: 'Add Items', onTap: () => Navigator.pushNamed(context, '/add-item')),
+                      MenuItem(
+                          icon: Icons.add_box_outlined,
+                          text: 'Add Items',
+                          onTap: () => Navigator.pushNamed(context, '/add-item')),
                       const Divider(),
-                      if (_user?.role == 'admin')
-                        MenuItem(icon: Icons.warehouse_outlined, text: 'Create Warehouse', onTap: () => Navigator.pushNamed(context, '/create-warehouse')),
-                      if (_user?.role == 'admin') const Divider(),
-                      MenuItem(icon: Icons.insert_chart_outlined, text: 'Reports', onTap: () => Navigator.pushNamed(context, '/reports')),
+                      MenuItem(
+                          icon: Icons.insert_chart_outlined,
+                          text: 'Reports',
+                          onTap: () => Navigator.pushNamed(context, '/reports')),
                       const Divider(),
-                      MenuItem(icon: Icons.logout, text: 'Logout', onTap: () => Navigator.pushNamed(context, '/signin')),
+                      MenuItem(
+                          icon: Icons.logout,
+                          text: 'Logout',
+                          onTap: () => Navigator.pushNamed(context, '/signin')),
                       const Divider(),
+
                     ],
                   ),
                 ],
@@ -191,20 +201,18 @@ class _AccountScreenState extends State<AccountScreen> {
         Expanded(
           flex: isLargeScreen ? 2 : 1,
           child: ListView(
-            children: [
-              const Divider(),
-              const MenuItem(icon: Icons.person, text: 'Profile'),
-              const Divider(),
-              const MenuItem(icon: Icons.hub_outlined, text: 'Role Management'),
-              const Divider(),
-              const MenuItem(icon: Icons.add_box_outlined, text: 'Add Items'),
-              const Divider(),
-              if (_user?.role == 'admin') const MenuItem(icon: Icons.warehouse_outlined, text: 'Create Warehouse'),
-              if (_user?.role == 'admin') const Divider(),
-              const MenuItem(icon: Icons.insert_chart_outlined, text: 'Reports'),
-              const Divider(),
-              const MenuItem(icon: Icons.logout, text: 'Logout'),
-              const Divider(),
+            children: const [
+              Divider(),
+              MenuItem(icon: Icons.person, text: 'Profile'),
+              Divider(),
+              MenuItem(icon: Icons.hub_outlined, text: 'Role Management'),
+              Divider(),
+              MenuItem(icon: Icons.add_box_outlined, text: 'Add Items'),
+              Divider(),
+              MenuItem(icon: Icons.insert_chart_outlined, text: 'Reports'),
+              Divider(),
+              MenuItem(icon: Icons.logout, text: 'Logout'),
+              Divider(),
             ],
           ),
         ),
@@ -228,7 +236,12 @@ class MenuItem extends StatelessWidget {
   final String text;
   final VoidCallback? onTap;
 
-  const MenuItem({super.key, required this.icon, required this.text, this.onTap});
+  const MenuItem({
+    super.key,
+    required this.icon,
+    required this.text,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -236,7 +249,11 @@ class MenuItem extends StatelessWidget {
       contentPadding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 16.0),
       visualDensity: VisualDensity.compact,
       leading: Icon(icon, size: 20, color: Theme.of(context).colorScheme.onSurface),
-      title: Text(text, style: const TextStyle(fontSize: 14), overflow: TextOverflow.ellipsis),
+      title: Text(
+        text,
+        style: const TextStyle(fontSize: 14),
+        overflow: TextOverflow.ellipsis,
+      ),
       trailing: Icon(Icons.chevron_right, size: 20, color: Theme.of(context).colorScheme.onSurface),
       onTap: onTap,
     );

@@ -21,7 +21,6 @@ import 'presentation/screens/add_item_screen.dart';
 import 'presentation/screens/reports_screen.dart';
 import 'presentation/screens/introduction_screen.dart';
 import 'presentation/screens/set_pin_screen.dart';
-import 'presentation/screens/create_warehouse_screen.dart';
 
 import 'presentation/widgets/offline_banner_wrapper.dart';
 
@@ -88,7 +87,6 @@ class MyApp extends StatelessWidget {
             '/profile': (context) => const ProfilePage(),
             '/add-item': (context) => const AddItemPage(),
             '/set-pin': (context) => const SetPinScreen(),
-            '/create-warehouse': (context) => const CreateWarehouseScreen(),
           };
 
           return MaterialApp(
