@@ -185,7 +185,7 @@ class _WarehouseDetailsScreenState extends State<WarehouseDetailsScreen>
                         ),
                       ),
                       subtitle: Text(
-                        '\$${item['price'].toStringAsFixed(2)} x ${item['quantity']}',
+                        '\$${(item['price'] as num).toDouble().toStringAsFixed(2)} x ${item['quantity']}',
                         style: const TextStyle(
                           fontFamily: 'TTTravels',
                           fontSize: 12,
@@ -223,7 +223,7 @@ class _WarehouseDetailsScreenState extends State<WarehouseDetailsScreen>
                         ),
                       ),
                       Text(
-                        '\$${cartItems.fold(0.0, (total, item) => total + (item['price'] as double) * (item['quantity'] as int)).toStringAsFixed(2)}',
+                        '\$${cartItems.fold(0.0, (total, item) => total + (item['price'] as num).toDouble() * (item['quantity'] as num).toInt()).toStringAsFixed(2)}',
                         style: const TextStyle(
                           fontFamily: 'TTTravels',
                           fontSize: 16,
@@ -581,7 +581,7 @@ class _WarehouseDetailsScreenState extends State<WarehouseDetailsScreen>
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            '\$${item['price'].toStringAsFixed(2)}',
+                            '\$${(item['price'] as num).toDouble().toStringAsFixed(2)}',
                             style: const TextStyle(
                               fontFamily: 'TTTravels',
                               fontSize: 16,

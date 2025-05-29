@@ -19,13 +19,13 @@ class _CartScreenState extends State<CartScreen> {
     },
     {
       'name': 'Wood table',
-      'price': 349.99,
+      'price': 349,
       'imageUrl': 'assets/images/table.png',
       'quantity': 2,
     },
     {
       'name': 'Home decor set',
-      'price': 129.99,
+      'price': 129,
       'imageUrl': 'assets/images/cabinet.png',
       'quantity': 1,
     },
@@ -35,7 +35,8 @@ class _CartScreenState extends State<CartScreen> {
   double getTotalPrice() {
     return cartItems.fold(
       0.0,
-          (total, item) => total + (item['price'] as double) * (item['quantity'] as int),
+          (total, item) =>
+      total + (item['price'] as num).toDouble() * (item['quantity'] as int),
     );
   }
 
@@ -100,9 +101,14 @@ class _CartScreenState extends State<CartScreen> {
               itemCount: cartItems.length,
               itemBuilder: (context, index) {
                 final item = cartItems[index];
+                final price = (item['price'] as num).toDouble();
+                final quantity = item['quantity'] as int;
+                final totalItemPrice = price * quantity;
+
                 return Card(
                   elevation: 2,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Row(
@@ -116,11 +122,14 @@ class _CartScreenState extends State<CartScreen> {
                             child: Image.asset(
                               item['imageUrl'],
                               fit: BoxFit.contain,
-                              errorBuilder: (context, error, stackTrace) {
+                              errorBuilder:
+                                  (context, error, stackTrace) {
                                 return Container(
                                   color: Colors.grey[300],
                                   child: const Center(
-                                    child: Text('Image Error', style: TextStyle(color: Colors.grey)),
+                                    child: Text('Image Error',
+                                        style: TextStyle(
+                                            color: Colors.grey)),
                                   ),
                                 );
                               },
@@ -143,7 +152,7 @@ class _CartScreenState extends State<CartScreen> {
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                '\$${(item['price'] * item['quantity']).toStringAsFixed(2)}',
+                                '\$${totalItemPrice.toStringAsFixed(2)}',
                                 style: const TextStyle(
                                   fontFamily: 'TTTravels',
                                   fontSize: 14,
@@ -154,11 +163,13 @@ class _CartScreenState extends State<CartScreen> {
                               Row(
                                 children: [
                                   IconButton(
-                                    icon: const Icon(Icons.remove_circle_outline),
-                                    onPressed: () => decreaseQuantity(index),
+                                    icon: const Icon(
+                                        Icons.remove_circle_outline),
+                                    onPressed: () =>
+                                        decreaseQuantity(index),
                                   ),
                                   Text(
-                                    '${item['quantity']}',
+                                    '$quantity',
                                     style: const TextStyle(
                                       fontFamily: 'TTTravels',
                                       fontSize: 14,
@@ -166,8 +177,10 @@ class _CartScreenState extends State<CartScreen> {
                                     ),
                                   ),
                                   IconButton(
-                                    icon: const Icon(Icons.add_circle_outline),
-                                    onPressed: () => increaseQuantity(index),
+                                    icon: const Icon(
+                                        Icons.add_circle_outline),
+                                    onPressed: () =>
+                                        increaseQuantity(index),
                                   ),
                                 ],
                               ),
@@ -213,9 +226,9 @@ class _CartScreenState extends State<CartScreen> {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
-                      // Логика оформления заказа
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Order placed successfully!')),
+                        const SnackBar(
+                            content: Text('Order placed successfully!')),
                       );
                     },
                     style: ElevatedButton.styleFrom(
