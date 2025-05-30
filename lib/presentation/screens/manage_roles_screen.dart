@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sales_tracking/services/api_service.dart';
 
 class ManageRolesScreen extends StatefulWidget {
   const ManageRolesScreen({super.key});
@@ -8,54 +9,83 @@ class ManageRolesScreen extends StatefulWidget {
 }
 
 class _ManageRolesScreenState extends State<ManageRolesScreen> {
-  final List<String> roles = const ['Admin', 'Moderator', 'Manager'];
-  final TextEditingController _emailController = TextEditingController();
-  String _selectedRole = 'Admin';
-  List<Map<String, dynamic>> members = [
-    {'name': 'Amir Syrymbetov (you)', 'role': 'Admin', 'isCurrentUser': true},
-    {'name': 'Temirkhanov Tamerlan', 'role': 'Manager', 'isCurrentUser': false},
-  ];
+  final List<String> roles = const ['admin', 'moderator', 'manager'];
+  final ApiService _apiService = ApiService();
+  List<Map<String, dynamic>> members = [];
+  bool isLoading = false;
 
   @override
-  void dispose() {
-    _emailController.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    _fetchUsers();
   }
 
-  void _sendInvite() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Invite sent!')),
-    );
-  }
-
-  void _deleteMember(int index) {
+  Future<void> _fetchUsers() async {
     setState(() {
-      members.removeAt(index);
+      isLoading = true;
     });
+    try {
+      final fetchedUsers = await _apiService.getAllUsers();
+      setState(() {
+        members = fetchedUsers;
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load users: $e')),
+        );
+      }
+    }
   }
 
-  void _updateRole(int index, String? newRole) {
-    if (newRole != null) {
+  Future<void> _updateUserRole(int index, String userId, String newRole) async {
+    print('_updateUserRole called: index=$index, userId=$userId, newRole=$newRole');
+    print('Current members[index] before update: ${members[index]}');
+
+    // Сохраняем старую роль для отката в случае ошибки
+    final oldRole = members[index]['role'];
+
+    // Сразу обновляем UI для лучшего UX
+    setState(() {
+      members[index]['role'] = newRole;
+    });
+
+    print('Updated members[index]: ${members[index]}');
+
+    try {
+      print('Sending API request...');
+      await _apiService.updateUserRole(userId: userId, role: newRole);
+      print('API request successful');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Role updated successfully')),
+        );
+      }
+    } catch (e) {
+      print('API request failed: $e');
+      // Если запрос не удался, возвращаем старое значение
       setState(() {
-        members[index]['role'] = newRole;
+        members[index]['role'] = oldRole;
       });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error updating role: $e')),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final brightness = Theme.of(context).brightness;
-    final isDarkMode = brightness == Brightness.dark;
-
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final backgroundColor = isDarkMode ? const Color(0xFF1A1A1A) : const Color(0xFFF8F8F2);
     final appBarColor = isDarkMode ? const Color(0xFF222222) : const Color(0xFFF8F8F2);
     final textColor = isDarkMode ? const Color(0xFFB8C7A1) : const Color(0xFF37421F);
-    final buttonColor = isDarkMode ? const Color(0xFF6A8B39) : const Color(0xFF3D4D1A);
     final iconColor = isDarkMode ? Colors.white : Colors.black;
-    final borderColor = isDarkMode ? const Color(0xFF444444) : Colors.black38;
-    final inputFillColor = isDarkMode ? const Color(0xFF2A2A2A) : Colors.white;
-    final inputTextColor = isDarkMode ? Colors.white : Colors.black;
-    final avatarColor = isDarkMode ? const Color(0xFF444444) : Colors.grey;
 
     return Scaffold(
       backgroundColor: backgroundColor,
@@ -76,181 +106,94 @@ class _ManageRolesScreenState extends State<ManageRolesScreen> {
         ),
         centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Share',
-              style: TextStyle(
-                fontSize: 18,
-                color: textColor,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: _emailController,
-                    style: TextStyle(color: inputTextColor),
-                    decoration: InputDecoration(
-                      hintText: 'email@example.com',
-                      hintStyle: TextStyle(color: isDarkMode ? Colors.grey : Colors.black54),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide(color: borderColor),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide(color: borderColor),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide(color: buttonColor),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-                      fillColor: inputFillColor,
-                      filled: true,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  decoration: BoxDecoration(
-                    color: inputFillColor,
-                    border: Border.all(color: borderColor),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: _selectedRole,
-                      dropdownColor: inputFillColor,
-                      items: roles
-                          .map((role) => DropdownMenuItem(
-                        value: role,
-                        child: Text(role, style: TextStyle(color: inputTextColor)),
-                      ))
-                          .toList(),
-                      onChanged: (value) {
-                        if (value != null) {
-                          setState(() => _selectedRole = value);
-                        }
-                      },
-                      icon: Icon(Icons.arrow_drop_down, color: iconColor),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 15),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: buttonColor,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                ),
-                onPressed: _sendInvite,
-                child: const Text(
-                  'Send invite',
-                  style: TextStyle(fontSize: 16, color: Colors.white),
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'Members of storage app',
-              style: TextStyle(
-                fontSize: 16,
-                color: textColor,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 15),
-            ...members.asMap().entries.map((entry) {
-              final index = entry.key;
-              final member = entry.value;
-              return _buildMemberItem(
-                context,
-                name: member['name'],
-                role: member['role'],
-                isCurrentUser: member['isCurrentUser'],
-                onDelete: () => _deleteMember(index),
-                onRoleChanged: (newRole) => _updateRole(index, newRole),
-                isDarkMode: isDarkMode,
-                textColor: inputTextColor,
-                borderColor: borderColor,
-                inputFillColor: inputFillColor,
-                iconColor: iconColor,
-                avatarColor: avatarColor,
-              );
-            }),
-          ],
-        ),
-      ),
-    );
-  }
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : members.isEmpty
+          ? const Center(
+        child: Text('No users found'),
+      )
+          : RefreshIndicator(
+        onRefresh: _fetchUsers,
+        child: ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: members.length,
+          itemBuilder: (context, index) {
+            final user = members[index];
 
-  Widget _buildMemberItem(
-      BuildContext context, {
-        required String name,
-        required String role,
-        required bool isCurrentUser,
-        required bool isDarkMode,
-        required Color textColor,
-        required Color borderColor,
-        required Color inputFillColor,
-        required Color iconColor,
-        required Color avatarColor,
-        VoidCallback? onDelete,
-        ValueChanged<String?>? onRoleChanged,
-      }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: [
-          CircleAvatar(radius: 20, backgroundColor: avatarColor),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              name,
-              style: TextStyle(fontSize: 16, color: textColor),
-            ),
-          ),
-          if (!isCurrentUser)
-            IconButton(
-              icon: Icon(Icons.delete_outline, color: isDarkMode ? Colors.white70 : Colors.black87),
-              onPressed: onDelete,
-            ),
-          const SizedBox(width: 4),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            decoration: BoxDecoration(
-              color: inputFillColor,
-              border: Border.all(color: borderColor),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                value: role,
-                dropdownColor: inputFillColor,
-                items: ['Admin', 'Moderator', 'Manager']
-                    .map((r) => DropdownMenuItem(
-                  value: r,
-                  child: Text(r, style: TextStyle(color: textColor)),
-                ))
-                    .toList(),
-                onChanged: onRoleChanged,
-                icon: Icon(Icons.arrow_drop_down, color: iconColor),
+            // Отладочная информация для структуры данных
+            print('User $index data: $user');
+            print('Available keys: ${user.keys.toList()}');
+
+            // Попробуем разные варианты названий полей
+            final userId = user['id']?.toString() ??
+                user['userId']?.toString() ??
+                user['_id']?.toString() ??
+                user['user_id']?.toString();
+
+            final fullName = user['fullName'] ?? user['full_name'] ?? user['name'];
+            final email = user['email'];
+            final currentRole = user['role'];
+
+            print('Extracted: userId=$userId, fullName=$fullName, email=$email, role=$currentRole');
+
+            // Проверяем, что у нас есть необходимые данные
+            if (userId == null) {
+              return Card(
+                margin: const EdgeInsets.only(bottom: 12),
+                child: ListTile(
+                  title: Text(fullName ?? email ?? 'Unknown User'),
+                  subtitle: Text('Error: No user ID found'),
+                  trailing: Icon(Icons.error, color: Colors.red),
+                ),
+              );
+            }
+
+            // Отладочная информация
+            print('User $index: currentRole = "$currentRole", type: ${currentRole.runtimeType}');
+            print('Available roles: $roles');
+            print('Role in roles list: ${roles.contains(currentRole)}');
+
+            // Убеждаемся, что роль существует в списке, иначе используем первую доступную
+            final validRole = roles.contains(currentRole) ? currentRole : roles.first;
+
+            return Card(
+              margin: const EdgeInsets.only(bottom: 12),
+              child: ListTile(
+                title: Text(fullName ?? email ?? ''),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(email ?? ''),
+                    Text('Current role: $currentRole', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                  ],
+                ),
+                trailing: DropdownButton<String>(
+                  value: validRole, // Используем проверенную роль
+                  onChanged: (newRole) {
+                    print('Dropdown changed: from "$currentRole" to "$newRole"');
+                    if (newRole != null && newRole != currentRole) {
+                      print('Calling _updateUserRole with index: $index, userId: $userId, newRole: $newRole');
+                      // Проверяем, что userId не null перед вызовом
+                      if (userId != null) {
+                        _updateUserRole(index, userId, newRole);
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Error: User ID not found')),
+                        );
+                      }
+                    }
+                  },
+                  items: roles
+                      .map((r) => DropdownMenuItem(
+                    value: r,
+                    child: Text(r),
+                  ))
+                      .toList(),
+                ),
               ),
-            ),
-          ),
-        ],
+            );
+          },
+        ),
       ),
     );
   }

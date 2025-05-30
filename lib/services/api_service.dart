@@ -413,5 +413,41 @@ class ApiService {
 
     debugPrint('[WAREHOUSE CREATED] ${response.body}');
   }
+  Future<List<Map<String, dynamic>>> getAllUsers() async {
+    final authBox = await Hive.openBox<AuthData>('auth');
+    final auth = authBox.get('session');
+    if (auth == null) throw Exception('Not logged in');
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/users'),
+      headers: {'Authorization': 'Bearer ${auth.token}'},
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      return List<Map<String, dynamic>>.from(data);
+    } else {
+      throw Exception('Failed to fetch users');
+    }
+  }
+
+  Future<void> updateUserRole({required String userId, required String role}) async {
+    final authBox = await Hive.openBox<AuthData>('auth');
+    final auth = authBox.get('session');
+    if (auth == null) throw Exception('Not logged in');
+
+    final response = await http.patch(
+      Uri.parse('$baseUrl/users/$userId/role'),
+      headers: {
+        'Authorization': 'Bearer ${auth.token}',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({'role': role}),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update role');
+    }
+  }
 }
 
