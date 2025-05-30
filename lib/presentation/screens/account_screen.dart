@@ -149,8 +149,6 @@ class _AccountScreenState extends State<AccountScreen> {
                       if (_user?.role == 'admin')
                         MenuItem(icon: Icons.warehouse_outlined, text: 'Create Warehouse', onTap: () => Navigator.pushNamed(context, '/create-warehouse')),
                       if (_user?.role == 'admin') const Divider(),
-                      MenuItem(icon: Icons.insert_chart_outlined, text: 'Reports', onTap: () => Navigator.pushNamed(context, '/reports')),
-                      const Divider(),
                       MenuItem(icon: Icons.logout, text: 'Logout', onTap: () => Navigator.pushNamed(context, '/signin')),
                       const Divider(),
                     ],
@@ -201,8 +199,6 @@ class _AccountScreenState extends State<AccountScreen> {
               const Divider(),
               if (_user?.role == 'admin') const MenuItem(icon: Icons.warehouse_outlined, text: 'Create Warehouse'),
               if (_user?.role == 'admin') const Divider(),
-              const MenuItem(icon: Icons.insert_chart_outlined, text: 'Reports'),
-              const Divider(),
               const MenuItem(icon: Icons.logout, text: 'Logout'),
               const Divider(),
             ],
